@@ -37,18 +37,24 @@ open import Data.Rational
 --open import Data.Nat
 
 
- 
--- Define 2D Points
+
+
+  
+-- Define 3D representation of 2DPoints
 data Point : Set where
-  mkPoint :   ℚ  →  ℚ   → Point
+  mkPoint :   ℚ  →  ℚ  →  ℚ   → Point
 
 -- get X value from Point
 getXValP : Point →   ℚ
-getXValP (mkPoint x y) = x
+getXValP (mkPoint x y z) = x
 
 -- get Y value from Point
 getYValP : Point →   ℚ
-getYValP (mkPoint x y) = y
+getYValP (mkPoint x y z) = y
+
+-- get Z value from Point
+getZValP : Point →   ℚ
+getZValP (mkPoint x y z) = z
 
 
 -- Define 2D Line (Idea: basically same structure as Points but verry different interpretation)
@@ -68,11 +74,11 @@ getBValL (a x+ b y+1=0) = b
 
 --Point to Line
 dualPL : Point  → Line
-dualPL (mkPoint a b) = a x+ b y+1=0
+dualPL (mkPoint a b z) = (a ÷ z) x+ (b ÷ z) y+1=0
 
 --Line to Point
 dualLP : Line  → Point
-dualLP (a x+ b y+1=0) =  mkPoint a b
+dualLP (a x+ b y+1=0) =  mkPoint a b (normalize 1 1)
 
 
 
@@ -112,26 +118,15 @@ XtoYVal (a x+ b y+1=0) val = ((a * val) + (normalize 1 1)) ÷ b
 
 
 intersecPoint : Line → Line → Point
-intersecPoint (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0) = mkPoint (intersecXVal (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0)) (XtoYVal  (a1 x+ b1 y+1=0) (intersecXVal (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0)) )
+intersecPoint (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0) = mkPoint (intersecXVal (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0)) (XtoYVal  (a1 x+ b1 y+1=0) (intersecXVal (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0)) ) (normalize 1 1)
 -- Question: can you save parts of the code into variables to make it more readable?
 -- If I could put (intersecXVal (a x+ b y+1=0) (a x+ b y+1=0)) into a variable xVal, I could simply write:
--- intersecPoint (a x+ b y+1=0) (a x+ b y+1=0) = mkPoint xVal  (XtoYVal  (a x+ b y+1=0) xVal )
+-- intersecPoint (a x+ b y+1=0) (a x+ b y+1=0) = mkPoint xVal (XtoYVal  (a x+ b y+1=0) xVal ) (normalize 1 1)
 
 
 -- Calculate if Point is on Line
 data isOnLine : Point → Line → Set where
-  base : {a1 b1 a2 b2 : ℚ} → isOnLine (mkPoint a1 b1)  (a2 x+ b2 y+1=0)  --needs additional constraint for a1,b1,a2,b2 {(a1* a2)+(b1*b2)+normalize 1 1 ≃ normalize 0 0} 
-
-
-
-
-
-
-
-
-
-
-
+  base : {a1 b1 a2 b2 : ℚ} → isOnLine (mkPoint a1 b1 (normalize 1 1))  (a2 x+ b2 y+1=0)  --needs additional constraint for a1,b1,a2,b2 {(a1* a2)+(b1*b2)+normalize 1 1 ≃ normalize 0 0} 
 
 --Tests
 -- XtoYVal ((normalize 1 1) x+ (normalize 2 1) y+1=0) (normalize 3 1)
@@ -155,3 +150,100 @@ data isOnLine : Point → Line → Set where
 
 
 -- Lemma 3: If you move a point p on a line L, then the dual of that point rotates arround the dual of L
+
+
+
+
+-- Zu den Implementierungen von der projektive Ebene P^2 und den homogene Koordinaten:
+
+
+data False : Set  where
+
+¬_ : Set → Set
+¬ A = A → False
+
+
+-- Define a proof that a given Point is not (0,0,0)
+data not0 : Point → Set  where
+  xNotZero : (x : ℚ) → (¬(x  ≃ 0ℚ)) → (y : ℚ) → (z : ℚ) → not0 (mkPoint x y z)
+  yNotZero : (x : ℚ) → (y : ℚ)  → (¬(y  ≃ 0ℚ)) → (z : ℚ) → not0 (mkPoint x y z)
+  zNotZero : (x : ℚ) → (y : ℚ) → (z : ℚ) → (¬(z  ≃ 0ℚ))  → not0 (mkPoint x y z)
+
+--Test prove:
+--Prove still does not work. I don't know why
+prove1 : not0 (mkPoint (normalize 1 2) 0ℚ 0ℚ)
+prove1 = xNotZero (normalize 1 2) (¬( normalize 1 2  ≃ 0ℚ)) 0ℚ 0ℚ
+
+
+--Weiter ohne proof:
+
+data P2 : Set where
+  3point : ℚ → ℚ → P2  -- (x,y,1)
+  2point : ℚ → P2         -- (x,1,0)
+  1point : P2                -- (1,0,0)
+
+--Problem: (...  ≃ 0ℚ) bzw. ¬ (...  ≃ 0ℚ) sind keine Funktionen,
+--die zum Beispiel true oder false oder ähnliches zurückgeben woran man eine Fallunterscheidung machen kann 
+--Idee: Vieleicht neue ≃b und ¬b erstellen, die man zwar weniger Gut für beweise, aber dafür für Fallunterscheidungen nutzen kann?
+--true und false müsste man hier auf jeden Fall durch etwas passenderes ersetzen
+
+----pointToP2 : Point → P2
+----pointToP2 (mkPoint x y z) with (¬(z  ≃ 0ℚ))
+----...      | true = 3point (x ÷ z) (y ÷ z)  -- (x,y,1)
+----...      | false with (¬(y  ≃ 0ℚ))
+----         | false | true  = 2point (x ÷ y)  -- (x,1,0)
+----         | false | false                            -- (1,0,0)
+
+P2toPoint : P2 → Point
+P2toPoint 1point = mkPoint 1ℚ 0ℚ 0ℚ
+P2toPoint 2point x = mkPoint x 1ℚ 0ℚ
+P2toPoint 3point x y = mkPoint x y 0ℚ
+
+--Definition von Betrag für rationale Zahlen
+abs : ℚ → ℚ
+abs x = (x * x) ÷ x
+--Oder
+--abs : ℚ → ℚ
+--abs x  with x ≥ 0ℚ
+--... | true = x
+--... | false = - x
+
+
+
+data 2SP : Set where
+  3point+ : ℚ → ℚ → P2  -- (x,y,1)
+  3point- : ℚ → ℚ → P2  -- (x,y,-1)
+  
+  2point+ : ℚ → P2         -- (x,1,0)
+  2point- : ℚ → P2         -- (x,-1,0)
+  
+  1point+ : P2                -- (1,0,0)
+  1point- : P2                -- (-1,0,0)
+
+
+pointTo2SP : Point → 2SP
+pointTo2SP (mkPoint x y z) with (¬(z  ≃ 0ℚ))
+...      | true with (z ≥ 0ℚ)                                                 -- (x,y,+/-1)
+...      | true | true = 3point+ (x ÷ z) (y ÷ z)                     -- (x,y,+1)
+...      | true | false = 3point- (x ÷ (abs z)) (y ÷ (abs z))   -- (x,y,-1)
+
+...      | false with (¬(y  ≃ 0ℚ))                      
+...      | false | true  with (y ≥ 0ℚ)                              -- (x,+/-1,0)
+...      | false | true | true =  2point+ (x ÷ y)             -- (x,+1,0)
+...      | false | true | false = 2point- (x ÷ (abs y))      -- (x,-1,0)
+
+...      | false | false with (x ≥ 0ℚ)                       -- (+/-1,0,0)
+...      | false | false | true = 1point+                   -- (+/-1,0,0)
+...      | false | false | false = 1point-                    -- (+/-1,0,0)
+
+
+
+2SPtoPoint : 2SP → Point
+2SPtoPoint 1point+ = mkPoint 1ℚ 0ℚ 0ℚ
+2SPtoPoint 1point- = mkPoint (- 1ℚ) 0ℚ 0ℚ
+
+2SPtoPoint 2point+ x = mkPoint x 1ℚ 0ℚ
+2SPtoPoint 2point- x = mkPoint x (- 1ℚ) 0ℚ
+
+2SPtoPoint 3point+ x y = mkPoint x y 1ℚ
+2SPtoPoint 3point- x y = mkPoint x y (- 1ℚ)

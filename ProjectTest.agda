@@ -38,8 +38,9 @@ open import Data.Rational
 
 
 
+-- Viele der folgenden Funktionen und Datentypen sind outdated, da sie auf dreidimensionalen Punkten und nicht auf 2SP bassieren
+-- Da einige von ihnen später eventuell noch nützlich sind, lass ich sie erst einmal bestehen
 
-  
 -- Define 3D representation of 2DPoints
 data Point : Set where
   mkPoint :   ℚ  →  ℚ  →  ℚ   → Point
@@ -145,22 +146,38 @@ data isOnLine : Point → Line → Set where
 
 -- Lemma 1: If a point p lies on a line L, then the dual of that line dL lies on the dual of that point dp
 
-
 -- Lemma 2: If two points p1 and p2 lie on a line L, then the intersection of the dual of p1 and p2, is the dual point of line L
-
 
 -- Lemma 3: If you move a point p on a line L, then the dual of that point rotates arround the dual of L
 
 
 
 
--- Zu den Implementierungen von der projektive Ebene P^2 und den homogene Koordinaten:
 
+------- Zu den Implementierungen von der projektive Ebene P^2 und den homogene Koordinaten:
+
+
+data True : Set where
+  true : True
 
 data False : Set  where
 
+
 ¬_ : Set → Set
 ¬ A = A → False
+
+
+--data Bool : Set where
+--  BTrue : Bool
+--  BFalse : Bool
+
+--not : Bool → Bool
+--not BTrue = BFalse
+--not BFalse = BTrue
+
+----_=b_ : ℚ → ℚ → Bool
+----x =b x = True
+
 
 
 -- Define a proof that a given Point is not (0,0,0)
@@ -171,8 +188,15 @@ data not0 : Point → Set  where
 
 --Test prove:
 --Prove still does not work. I don't know why
-prove1 : not0 (mkPoint (normalize 1 2) 0ℚ 0ℚ)
-prove1 = xNotZero (normalize 1 2) (¬( normalize 1 2  ≃ 0ℚ)) 0ℚ 0ℚ
+----prove1 : not0 (mkPoint (normalize 1 2) 0ℚ 0ℚ)
+----prove1 = xNotZero (normalize 1 2) (¬( normalize 1 2  ≃ 0ℚ)) 0ℚ 0ℚ
+
+--Maybe more like this:?
+---proof1 : not0 (mkPoint (normalize 1 2) 0ℚ 0ℚ)
+---proof1 = xNotZero (normalize 1 2) ProofNot0 0ℚ 0ℚ
+---  where
+---    ProofNot0 : (normalize 1 2)  ≃ 0ℚ → False
+---    ProofNot0 = {!!}
 
 
 --Weiter ohne proof:
@@ -195,9 +219,11 @@ data P2 : Set where
 ----         | false | false                            -- (1,0,0)
 
 P2toPoint : P2 → Point
+P2toPoint (3point x y) = mkPoint x y 0ℚ
+P2toPoint (2point x) = mkPoint x 1ℚ 0ℚ
 P2toPoint 1point = mkPoint 1ℚ 0ℚ 0ℚ
-P2toPoint 2point x = mkPoint x 1ℚ 0ℚ
-P2toPoint 3point x y = mkPoint x y 0ℚ
+
+
 
 --Definition von Betrag für rationale Zahlen
 abs : ℚ → ℚ
@@ -211,30 +237,30 @@ abs x = (x * x) ÷ x
 
 
 data 2SP : Set where
-  3point+ : ℚ → ℚ → P2  -- (x,y,1)
-  3point- : ℚ → ℚ → P2  -- (x,y,-1)
+  3point+ : ℚ → ℚ → 2SP  -- (x,y,1)
+  3point- : ℚ → ℚ → 2SP  -- (x,y,-1)
   
-  2point+ : ℚ → P2         -- (x,1,0)
-  2point- : ℚ → P2         -- (x,-1,0)
+  2point+ : ℚ → 2SP         -- (x,1,0)
+  2point- : ℚ → 2SP         -- (x,-1,0)
   
-  1point+ : P2                -- (1,0,0)
-  1point- : P2                -- (-1,0,0)
+  1point+ : 2SP                -- (1,0,0)
+  1point- : 2SP                -- (-1,0,0)
 
 
-pointTo2SP : Point → 2SP
-pointTo2SP (mkPoint x y z) with (¬(z  ≃ 0ℚ))
-...      | true with (z ≥ 0ℚ)                                                 -- (x,y,+/-1)
-...      | true | true = 3point+ (x ÷ z) (y ÷ z)                     -- (x,y,+1)
-...      | true | false = 3point- (x ÷ (abs z)) (y ÷ (abs z))   -- (x,y,-1)
+--pointTo2SP : Point → 2SP
+--pointTo2SP (mkPoint x y z) with (¬(z  ≃ 0ℚ))
+--...      | true with (z ≥ 0ℚ)                                                 -- (x,y,+/-1)
+--...      | true | true = 3point+ (x ÷ z) (y ÷ z)                     -- (x,y,+1)
+--...      | true | false = 3point- (x ÷ (abs z)) (y ÷ (abs z))   -- (x,y,-1)
 
-...      | false with (¬(y  ≃ 0ℚ))                      
-...      | false | true  with (y ≥ 0ℚ)                              -- (x,+/-1,0)
-...      | false | true | true =  2point+ (x ÷ y)             -- (x,+1,0)
-...      | false | true | false = 2point- (x ÷ (abs y))      -- (x,-1,0)
+--...      | false with (¬(y  ≃ 0ℚ))                      
+--...      | false | true  with (y ≥ 0ℚ)                              -- (x,+/-1,0)
+--...      | false | true | true =  2point+ (x ÷ y)             -- (x,+1,0)
+--...      | false | true | false = 2point- (x ÷ (abs y))      -- (x,-1,0)
 
-...      | false | false with (x ≥ 0ℚ)                       -- (+/-1,0,0)
-...      | false | false | true = 1point+                   -- (+/-1,0,0)
-...      | false | false | false = 1point-                    -- (+/-1,0,0)
+--...      | false | false with (x ≥ 0ℚ)                       -- (+/-1,0,0)
+--...      | false | false | true = 1point+                   -- (+/-1,0,0)
+--...      | false | false | false = 1point-                    -- (+/-1,0,0)
 
 
 
@@ -242,8 +268,79 @@ pointTo2SP (mkPoint x y z) with (¬(z  ≃ 0ℚ))
 2SPtoPoint 1point+ = mkPoint 1ℚ 0ℚ 0ℚ
 2SPtoPoint 1point- = mkPoint (- 1ℚ) 0ℚ 0ℚ
 
-2SPtoPoint 2point+ x = mkPoint x 1ℚ 0ℚ
-2SPtoPoint 2point- x = mkPoint x (- 1ℚ) 0ℚ
+2SPtoPoint (2point+ x) = mkPoint x 1ℚ 0ℚ
+2SPtoPoint (2point- x) = mkPoint x (- 1ℚ) 0ℚ
 
-2SPtoPoint 3point+ x y = mkPoint x y 1ℚ
-2SPtoPoint 3point- x y = mkPoint x y (- 1ℚ)
+2SPtoPoint (3point+ x y) = mkPoint x y 1ℚ
+2SPtoPoint (3point- x y) = mkPoint x y (- 1ℚ)
+
+
+
+-- Line to 2SP
+-- Problem?: Bis jetzt stellen wir geraden nur durch die 2 endlichen Werte a und b da.
+-- Allerdings kann man damit das dual von Punkten die unendlich weit weg zum Ursprung sind nicht bilde.
+-- Das wären also Geraden die durch den Ursprung wandern. Dies könnte ein Problem sein.
+-- Idee vieleicht Geraden auch im 2SP Koordinatensystem darstellen?
+-- dual von (a,b,c) also nicht mehr als ((a÷c) x+ (b÷c) y +1=0) darstellen sondern als, zum Beispiel, 1line+, 1line-, 2line+ ...
+-- Dann wären Geraden und 2Sp Punkte aber auch fast identisch..
+dualL2SP : Line  → 2SP
+dualL2SP (a x+ b y+1=0) = 3point+ a b
+
+
+--2SP to Line
+-- Wegen dem selben Grund können wir im Moment  auch nur die 3point Version 2SP zu Geraden umwandeln 
+dual2SPL : 2SP  → Line
+--dual2SPL 1point+ = (1ℚ) x+ (0ℚ) y+1=0
+--dual2SPL 1point- = (- 1ℚ) x+ (0ℚ) y+1=0
+
+--dual2SPL (2point+ a) = (a) x+ (1ℚ) y+1=0
+--dual2SPL (2point- a) = (a) x+ (- 1ℚ) y+1=0
+
+dual2SPL (3point+ a b) = (a) x+ (b) y+1=0
+dual2SPL (3point- a b) = (- a) x+ (- b) y+1=0
+
+
+-- Intersection
+-- Ich versuche die Intersection zwischen zwei Geraden ähnlich zu machen wie ich das vorher definiert hatte
+-- Der Vorteil ist dass zwei Geraden sich in 2SP immer schneiden und man jetzt keinen "haveIntersection" Proof aufstellen muss
+
+-- Problem: Geraden die sich im Unendlichen schneiden nicht behandelt.
+-- Idee: Eventuell Fallunterscheidung:
+
+--Fall1: Geraden haben einen Schnittpunkt in ℚ^2
+--Hier eventuell soetwas ähnliches wie:
+--intersec2SP (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0) = Point3point+ (intersecXVal (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0)) (XtoYVal  (a1 x+ b1 y+1=0) (intersecXVal (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0)) )
+--Fall2: Geraden schneiden sich nicht in ℚ^2 => Schnittpunkt im unendlichen
+--Fall3: Geraden sind identisch: Da bin ich mir nicht sicher wie man vorgehen sollte: Einen beliebigen Schnittpunkt wählen? Diesen Fall gar nicht betrachten?
+
+{-
+intersec2SP : Line → Line → 2SP
+intersec2SP (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0) with (a1 ≃ a2)
+...                                                                           | true
+...                                                                           | true  with (b1 ≃ b2)
+...                                                                           | true | true  -- Fall3
+...                                                                           | true | false -- Fall1
+
+...                                                                           | false
+...                                                                           | false with (b1 ≃ b2)
+...                                                                           | false | true  --Fall1
+...                                                                           | false | false --Fall1 oder Fall2 falls (a1÷a2)≃(b1÷b2) also falls die entsprechenden Richtungsvektoren in die selbe richtung zeigen
+-}
+--Ich glaube diesen Aufbau habe ich etwas unnötig komplex gemacht
+
+
+--Beweis ob ein 2SP-Punkt auf einer Gerade liegt
+--Idee: ähnlicher Aufbau wie bei ℚ^2 Punkt auf einer Gerade
+--Problem würe nicht bei Punkten funktionieren, die unendlich weit weg vom Ursprung liegen.
+
+-- Calculate if Point is on Line
+--data isOnLine : Point → Line → Set where
+--...
+
+
+
+--Todo:
+--Fallunterscheidung richtig machen (true und false durch etwas passendes ersetzen)
+--Beweis, dass x nicht 0 ist richtig aufstellen
+--Eventuell Geraden neu definieren im homogenen im 2SP Koordinatensystem?
+--...

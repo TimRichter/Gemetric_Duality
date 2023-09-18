@@ -149,7 +149,7 @@ dualPL' (mkPoint x y z) (mkz≢0 zNot0) =
       num≢0 : isFalse ( ℤ.∣ ↥ z ∣ ≟ℕ 0)
       num≢0 = ≢0⇒num≢0 zNot0
     in
-      dualPL (mkPoint (_÷_  x z {n≢0 = num≢0}) (_÷_  y z {n≢0 = num≢0}) 1ℚ)
+      (_÷_  x z {n≢0 = num≢0}) x+  _÷_  y z {n≢0 = num≢0} y+1=0
 
 ------- Zu den Implementierungen von der projektive Ebene P^2 und den homogene Koordinaten:
 

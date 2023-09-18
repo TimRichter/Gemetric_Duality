@@ -1,38 +1,16 @@
-{-
-  Welcome to Agda! :-)
-
-  If you are new to Agda, you could play The HoTT Game, a tutorial for learning
-  Agda and homotopy type theory. You can start the game using the "Help" menu
-  and then navigating to a file such as 1FundamentalGroup/Quest0.agda. You
-  will also need to open the accompanying guide in your browser:
-  https://thehottgameguide.readthedocs.io/
-
-  This editor runs on agdapad.quasicoherent.io. Your Agda code is stored on
-  this server and should be available when you revisit the same Agdapad session.
-  However, absolutely no guarantees are made. You should make backups by
-  downloading (see the clipboard icon in the lower right corner).
-
-  C-c C-l          check file
-  C-c C-SPC        check hole
-  C-c C-,          display goal and context
-  C-c C-c          split cases
-  C-c C-r          fill in boilerplate from goal
-  C-c C-d          display type of expression
-  C-c C-v          evaluate expression (normally this is C-c C-n)
-  C-c C-a          try to find proof automatically
-  C-z              enable Vi keybindings
-  C-x C-+          increase font size
-  \bN \alpha \to   math symbols
-
-  "C-c" means "<Ctrl key> + c". In case your browser is intercepting C-c,
-  you can also use C-o. In case your browser in intercepting C-SPC, you can
-  also use C-p. For pasting code into the Agdapad, see the clipboard
-  icon in the lower right corner.
-
-  In text mode, use <F10> to access the menu bar, not the mouse.
--}
-
 open import Data.Rational
+open import Data.Rational.Properties
+open import Relation.Nullary
+open import Data.Bool hiding (_<?_)
+open import Data.Empty
+open import Relation.Binary.PropositionalEquality
+open import Data.Integer.Base as ℤ using (ℤ; +_; +0; -[1+_])
+open import Relation.Nullary.Decidable renaming (False to isFalse ; True to isTrue)
+open import Relation.Unary renaming (Decidable to DecidableP)
+open import Data.Nat.Base as ℕ
+open import Data.Nat.Properties renaming (_≟_ to _≟ℕ_ ; _<?_ to _<ℕ?_)
+open import Agda.Builtin.Unit
+
 --open import Data.Integer
 --open import Data.Nat
 
@@ -74,8 +52,9 @@ getBValL (a x+ b y+1=0) = b
 --Dual functions
 
 --Point to Line
+-- Tim: Cannot work like this. You need an additional argument of type z ≢ 0 
 dualPL : Point  → Line
-dualPL (mkPoint a b z) = (a ÷ z) x+ (b ÷ z) y+1=0
+dualPL (mkPoint a b z) = {!!} -- (a ÷ z) x+ (b ÷ z) y+1=0
 
 --Line to Point
 dualLP : Line  → Point
@@ -99,9 +78,12 @@ dualLP (a x+ b y+1=0) =  mkPoint a b (normalize 1 1)
 
 -- Get X Value of Intersection Point
 -- Problem1: How do you prove, that b1, b2 and (b1 * b2 * (a1 ÷ b2 - a1 ÷ b1)) are not 0?
+-- Tim: You just cannot prove this! As of now, intersecXVal takes two arbitrary lines as arguments.
+--      e.g. the lines (1 x+ 0 y+1=0) and (2 x+ 0 y+1=0) are perfectly fine arguments!
+--      You have to require additional arguments that ensure
 -- Problem2: Proof that these Lines have an intersection
 intersecXVal : Line  → Line  →  ℚ
-intersecXVal (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0) = - (b1 - b2) ÷ ((b1 * b2) * ((a1 ÷ b2) - (a1 ÷ b1))) 
+intersecXVal (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0) = {!!} -- - (b1 - b2) ÷ ((b1 * b2) * ((a1 ÷ b2) - (a1 ÷ b1))) 
 
 -- Idea to solve Problem1: Add a isNotZero function or Type:
 -- data isNotZero : ℚ → Set  where
@@ -114,8 +96,9 @@ data haveIntersection : Line  → Line  →  Set where
 
 -- Get Y Value of Intersection Point out of the X Value
 -- Problem1: Prove that b is not 0
+-- Tim: Again, for an arbitrary line this simply isn't true, so you cannot prove it!
 XtoYVal : Line →  ℚ →  ℚ
-XtoYVal (a x+ b y+1=0) val = ((a * val) + (normalize 1 1)) ÷ b
+XtoYVal (a x+ b y+1=0) val = {!!} -- ((a * val) + (normalize 1 1)) ÷ b
 
 
 intersecPoint : Line → Line → Point
@@ -151,8 +134,22 @@ data isOnLine : Point → Line → Set where
 -- Lemma 3: If you move a point p on a line L, then the dual of that point rotates arround the dual of L
 
 
+data z≢0 : Point → Set where
+  mkz≢0 : ∀ {x y z} → (z ≢ 0ℚ) → z≢0 (mkPoint x y z)
+
+≢0⇒num≢0 : {q : ℚ} → q ≢ 0ℚ → isFalse ( ℤ.∣ ↥ q ∣ ≟ℕ 0)
+≢0⇒num≢0 {mkℚ (+_ zero)  denominator-1 isCoprime} proof = proof (≃⇒≡ refl)
+≢0⇒num≢0 {mkℚ +[1+ n ]   denominator-1 isCoprime} proof = tt
+≢0⇒num≢0 {mkℚ (-[1+_] n) denominator-1 isCoprime} proof = tt
 
 
+dualPL' : (p : Point) → z≢0 p → Line
+dualPL' (mkPoint x y z) (mkz≢0 zNot0) =
+    let
+      num≢0 : isFalse ( ℤ.∣ ↥ z ∣ ≟ℕ 0)
+      num≢0 = ≢0⇒num≢0 zNot0
+    in
+      dualPL (mkPoint (_÷_  x z {n≢0 = num≢0}) (_÷_  y z {n≢0 = num≢0}) 1ℚ)
 
 ------- Zu den Implementierungen von der projektive Ebene P^2 und den homogene Koordinaten:
 
@@ -160,11 +157,12 @@ data isOnLine : Point → Line → Set where
 data True : Set where
   true : True
 
-data False : Set  where
+-- Tim: let's use  ⊥  (defined in Data.Empty) instead of False
+-- data False : Set  where
 
-
-¬_ : Set → Set
-¬ A = A → False
+-- Tim: comes with Relation.Nullary
+-- ¬_ : Set → Set
+-- ¬ A = A → False
 
 
 --data Bool : Set where
@@ -192,11 +190,11 @@ data not0 : Point → Set  where
 ----prove1 = xNotZero (normalize 1 2) (¬( normalize 1 2  ≃ 0ℚ)) 0ℚ 0ℚ
 
 --Maybe more like this:?
----proof1 : not0 (mkPoint (normalize 1 2) 0ℚ 0ℚ)
----proof1 = xNotZero (normalize 1 2) ProofNot0 0ℚ 0ℚ
----  where
----    ProofNot0 : (normalize 1 2)  ≃ 0ℚ → False
----    ProofNot0 = {!!}
+proof1 : not0 (mkPoint (normalize 1 2) 0ℚ 0ℚ)
+proof1 = xNotZero (normalize 1 2) ProofNot0 0ℚ 0ℚ
+  where
+    ProofNot0 : (normalize 1 2)  ≃ 0ℚ → ⊥
+    ProofNot0 ()
 
 
 --Weiter ohne proof:
@@ -227,13 +225,21 @@ P2toPoint 1point = mkPoint 1ℚ 0ℚ 0ℚ
 
 --Definition von Betrag für rationale Zahlen
 abs : ℚ → ℚ
-abs x = (x * x) ÷ x
---Oder
---abs : ℚ → ℚ
---abs x  with x ≥ 0ℚ
---... | true = x
---... | false = - x
+-- Tim: this only works for x ≢ 0 !
+-- abs x = (x * x) ÷ x
+--Oder (yes, much better!)
+abs x  with (x <? 0ℚ)
+... | false because _ = x
+... | true because  _ = - x
 
+
+-- example for nondecidable (unary) predicate
+
+everywhereFalse : (f : ℕ → Bool) → Set
+everywhereFalse f = ∀ n → (f n ≡ false)
+
+decEverywhereFalse : DecidableP everywhereFalse
+decEverywhereFalse f = {!!}  -- this is not implementable!
 
 
 data 2SP : Set where

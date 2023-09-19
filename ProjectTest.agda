@@ -1,4 +1,4 @@
-open import Data.Rational
+open import Data.Rational renaming (_*_ to _*ℚ_ ; _+_ to _+ℚ_ ; _-_ to _-ℚ_)
 open import Data.Rational.Properties
 open import Relation.Nullary
 open import Data.Bool hiding (_<?_)
@@ -49,12 +49,41 @@ getBValL : Line → ℚ
 getBValL (a x+ b y+1=0) = b
 
 
+
+---
+
+data z≢0 : Point → Set where
+  mkz≢0 : ∀ {x y z} → (z ≢ 0ℚ) → z≢0 (mkPoint x y z)
+
+≢0⇒num≢0 : {q : ℚ} → q ≢ 0ℚ → isFalse ( ℤ.∣ ↥ q ∣ ≟ℕ 0)
+≢0⇒num≢0 {mkℚ (+_ zero)  denominator-1 isCoprime} proof = proof (≃⇒≡ refl)
+≢0⇒num≢0 {mkℚ +[1+ n ]   denominator-1 isCoprime} proof = tt
+≢0⇒num≢0 {mkℚ (-[1+_] n) denominator-1 isCoprime} proof = tt
+
+
+dualPL : (p : Point) → z≢0 p → Line
+dualPL (mkPoint x y z) (mkz≢0 zNot0) =
+    let
+      num≢0 : isFalse ( ℤ.∣ ↥ z ∣ ≟ℕ 0)
+      num≢0 = ≢0⇒num≢0 zNot0
+    in
+      (_÷_  x z {n≢0 = num≢0}) x+  _÷_  y z {n≢0 = num≢0} y+1=0
+
+
+testz≢0 : z≢0 (mkPoint  0ℚ  1ℚ  1ℚ)
+testz≢0 = mkz≢0 λ ()
+ 
+
+---
+
+
+
 --Dual functions
 
 --Point to Line
 -- Tim: Cannot work like this. You need an additional argument of type z ≢ 0 
-dualPL : Point  → Line
-dualPL (mkPoint a b z) = {!!} -- (a ÷ z) x+ (b ÷ z) y+1=0
+--dualPL : (p : Point) →  (z≢0 p) → Line
+--dualPL (mkPoint a b z) ( mkz≢0 λ ()) = (a ÷ z) x+ (b ÷ z) y+1=0
 
 --Line to Point
 dualLP : Line  → Point
@@ -82,35 +111,87 @@ dualLP (a x+ b y+1=0) =  mkPoint a b (normalize 1 1)
 --      e.g. the lines (1 x+ 0 y+1=0) and (2 x+ 0 y+1=0) are perfectly fine arguments!
 --      You have to require additional arguments that ensure
 -- Problem2: Proof that these Lines have an intersection
-intersecXVal : Line  → Line  →  ℚ
-intersecXVal (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0) = {!!} -- - (b1 - b2) ÷ ((b1 * b2) * ((a1 ÷ b2) - (a1 ÷ b1))) 
+--intersecXVal : Line  → Line  →  ℚ
+--intersecXVal (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0) = {!!} -- - (b1 - b2) ÷ ((b1 * b2) * ((a1 ÷ b2) - (a1 ÷ b1))) 
+
+data b≢0 : Line → Set where
+  mkb≢0 : ∀ {a b} → (b ≢ 0ℚ) → b≢0 ( a x+ b y+1=0 )
+
+intersecXVal : (l1 : Line) → (b≢0 l1)  → (l2 : Line) → (b≢0 l2)  →  ℚ
+intersecXVal (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0)  (mkb≢0 b2Not0) =
+    let
+      numb1≢0 : isFalse ( ℤ.∣ ↥ b1 ∣ ≟ℕ 0)
+      numb1≢0 = ≢0⇒num≢0 b1Not0
+      
+      numb2≢0 : isFalse ( ℤ.∣ ↥ b2 ∣ ≟ℕ 0)
+      numb2≢0 = ≢0⇒num≢0 b2Not0
+      
+    in
+      --(b1 - b2) ÷ ((b1 * b2) * ((a1 ÷ b2) - (a1 ÷ b1)))
+      _÷_ (b1 -ℚ b2) ((b1 *ℚ b2) *ℚ ((_÷_ a1 b2 {n≢0 = numb2≢0}) -ℚ ( _÷_ a1 b1 {n≢0 = numb1≢0})))  
+
+
+
+--dualPL : (p : Point) → z≢0 p → Line
+--dualPL (mkPoint x y z) (mkz≢0 zNot0) =
+--    let
+--      num≢0 : isFalse ( ℤ.∣ ↥ z ∣ ≟ℕ 0)
+--      num≢0 = ≢0⇒num≢0 zNot0
+--    in
+--      (_÷_  x z {n≢0 = num≢0}) x+  _÷_  y z {n≢0 = num≢0} y+1=0
 
 -- Idea to solve Problem1: Add a isNotZero function or Type:
 -- data isNotZero : ℚ → Set  where
--- base : 
+-- base : (a : ℚ) → isNotZero a
+
+
+--  base : (a : ℚ) -> isNotZero a
+--NonZero : Pred ℚ 0ℓ
+--NonZero p = ℚᵘ.NonZero (toℚᵘ p)
+
+--ℕ⁺ : Set
+--ℕ⁺ = Σ ℕ (λ n → iszero n ≡ ff)
 
 -- Idea to solve Problem2: Two Lines have no intersection Points, if they are parallel, which also means, that their dual Points have the same angle to the origin
 -- Note: Equality in Rationals is already defined with the ≃ operator
-data haveIntersection : Line  → Line  →  Set where
-  base : {a1 b1 a2 b2 : ℚ} → haveIntersection  (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0) --need additional constraint for a1,b1,a2,b2 {(a1 ÷ b1) ≃ (a2 ÷ b2) OR b1 ≃ b2 ≃ normalize 0 0} 
+--data haveIntersection : Line  → Line  →  Set where
+--  base : {a1 b1 a2 b2 : ℚ} → haveIntersection  (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0) --need additional constraint for a1,b1,a2,b2 {(a1 ÷ b1) ≃ (a2 ÷ b2) OR b1 ≃ b2 ≃ normalize 0 0} 
 
 -- Get Y Value of Intersection Point out of the X Value
 -- Problem1: Prove that b is not 0
 -- Tim: Again, for an arbitrary line this simply isn't true, so you cannot prove it!
-XtoYVal : Line →  ℚ →  ℚ
-XtoYVal (a x+ b y+1=0) val = {!!} -- ((a * val) + (normalize 1 1)) ÷ b
+XtoYVal : (l : Line) → (b≢0 l) →  ℚ →  ℚ
+XtoYVal (a x+ b y+1=0) (mkb≢0 bNot0) val = 
+    let
+      numb≢0 : isFalse ( ℤ.∣ ↥ b ∣ ≟ℕ 0)
+      numb≢0 = ≢0⇒num≢0 bNot0
+    in
+        _÷_  ((a *ℚ val) +ℚ (normalize 1 1)) b {n≢0 = numb≢0}
 
 
-intersecPoint : Line → Line → Point
-intersecPoint (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0) = mkPoint (intersecXVal (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0)) (XtoYVal  (a1 x+ b1 y+1=0) (intersecXVal (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0)) ) (normalize 1 1)
+
+intersecPoint :  (l1 : Line) → (b≢0 l1)  → (l2 : Line) → (b≢0 l2) → Point
+intersecPoint (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0)  (mkb≢0 b2Not0) = mkPoint (intersecXVal (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0) (mkb≢0 b2Not0)) (XtoYVal  (a1 x+ b1 y+1=0)  (mkb≢0 b1Not0)   (intersecXVal (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0) (mkb≢0 b2Not0)) ) (normalize 1 1)
+
+
 -- Question: can you save parts of the code into variables to make it more readable?
 -- If I could put (intersecXVal (a x+ b y+1=0) (a x+ b y+1=0)) into a variable xVal, I could simply write:
 -- intersecPoint (a x+ b y+1=0) (a x+ b y+1=0) = mkPoint xVal (XtoYVal  (a x+ b y+1=0) xVal ) (normalize 1 1)
 
 
 -- Calculate if Point is on Line
-data isOnLine : Point → Line → Set where
-  base : {a1 b1 a2 b2 : ℚ} → isOnLine (mkPoint a1 b1 (normalize 1 1))  (a2 x+ b2 y+1=0)  --needs additional constraint for a1,b1,a2,b2 {(a1* a2)+(b1*b2)+normalize 1 1 ≃ normalize 0 0} 
+--data isOnLine : Point → Line → Set where
+--  base : {a1 b1 a2 b2 : ℚ} → isOnLine (mkPoint a1 b1 (normalize 1 1))  (a2 x+ b2 y+1=0)  --needs additional constraint for a1,b1,a2,b2 {(a1* a2)+(b1*b2)+normalize 1 1 ≃ normalize 0 0} 
+
+data onLineMath : Point → Line → Set where
+  mkOnLineMath : ∀ {a1 b1 a2 b2} (mkPoint a1 b1 c) (a2 x+ b2 y+1=0) → ((a1 *ℚ a2) +ℚ (b1 *ℚ b2) +ℚ (normalize 1 1) ≃ (normalize 0 0) ) 
+
+data isOnLine : (p : Point) → (l : Line) → (onLineMath p l) → Set where
+  mkOnLine : ∀ {a1 b1 a2 b2} (mkPoint a1 b1 (normalize 1 1))  (a2 x+ b2 y+1=0)  ((a1 *ℚ a2) +ℚ (b1 *ℚ b2) +ℚ (normalize 1 1) ≃ (normalize 0 0) ) → isOnLine (mkPoint a1 b1 (normalize 1 1))  (a2 x+ b2 y+1=0)
+
+
+--needs additional constraint for a1,b1,a2,b2 {(a1* a2)+(b1*b2)+normalize 1 1 ≃ normalize 0 0} 
+
 
 --Tests
 -- XtoYVal ((normalize 1 1) x+ (normalize 2 1) y+1=0) (normalize 3 1)
@@ -134,22 +215,7 @@ data isOnLine : Point → Line → Set where
 -- Lemma 3: If you move a point p on a line L, then the dual of that point rotates arround the dual of L
 
 
-data z≢0 : Point → Set where
-  mkz≢0 : ∀ {x y z} → (z ≢ 0ℚ) → z≢0 (mkPoint x y z)
 
-≢0⇒num≢0 : {q : ℚ} → q ≢ 0ℚ → isFalse ( ℤ.∣ ↥ q ∣ ≟ℕ 0)
-≢0⇒num≢0 {mkℚ (+_ zero)  denominator-1 isCoprime} proof = proof (≃⇒≡ refl)
-≢0⇒num≢0 {mkℚ +[1+ n ]   denominator-1 isCoprime} proof = tt
-≢0⇒num≢0 {mkℚ (-[1+_] n) denominator-1 isCoprime} proof = tt
-
-
-dualPL' : (p : Point) → z≢0 p → Line
-dualPL' (mkPoint x y z) (mkz≢0 zNot0) =
-    let
-      num≢0 : isFalse ( ℤ.∣ ↥ z ∣ ≟ℕ 0)
-      num≢0 = ≢0⇒num≢0 zNot0
-    in
-      (_÷_  x z {n≢0 = num≢0}) x+  _÷_  y z {n≢0 = num≢0} y+1=0
 
 ------- Zu den Implementierungen von der projektive Ebene P^2 und den homogene Koordinaten:
 
@@ -184,14 +250,10 @@ data not0 : Point → Set  where
   yNotZero : (x : ℚ) → (y : ℚ)  → (¬(y  ≃ 0ℚ)) → (z : ℚ) → not0 (mkPoint x y z)
   zNotZero : (x : ℚ) → (y : ℚ) → (z : ℚ) → (¬(z  ≃ 0ℚ))  → not0 (mkPoint x y z)
 
---Test prove:
---Prove still does not work. I don't know why
-----prove1 : not0 (mkPoint (normalize 1 2) 0ℚ 0ℚ)
-----prove1 = xNotZero (normalize 1 2) (¬( normalize 1 2  ≃ 0ℚ)) 0ℚ 0ℚ
 
---Maybe more like this:?
-proof1 : not0 (mkPoint (normalize 1 2) 0ℚ 0ℚ)
-proof1 = xNotZero (normalize 1 2) ProofNot0 0ℚ 0ℚ
+--Test proof
+testProof : not0 (mkPoint (normalize 1 2) 0ℚ 0ℚ)
+testProof = xNotZero (normalize 1 2) ProofNot0 0ℚ 0ℚ
   where
     ProofNot0 : (normalize 1 2)  ≃ 0ℚ → ⊥
     ProofNot0 ()

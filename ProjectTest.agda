@@ -1,5 +1,6 @@
-open import Data.Rational renaming (_*_ to _*ℚ_ ; _+_ to _+ℚ_ ; _-_ to _-ℚ_)
-open import Data.Rational.Properties
+open import Data.Rational renaming (_*_ to _*ℚ_ ; _+_ to _+ℚ_ ; _-_ to _-ℚ_ ; _÷_ to _÷ℚ'_ ;
+                                    _≟_ to _≟ℚ_)
+open import Data.Rational.Properties renaming (<-cmp to <-cmpℚ)
 open import Relation.Nullary
 open import Data.Bool hiding (_<?_)
 open import Data.Empty
@@ -13,6 +14,21 @@ open import Agda.Builtin.Unit
 
 --open import Data.Integer
 --open import Data.Nat
+
+
+
+
+
+
+infixl 7 _÷ℚ_
+
+_÷ℚ_ : (p q : ℚ) → {q≢0 : q ≢ 0ℚ} → ℚ
+_÷ℚ_ p q {q≢0} = _÷ℚ'_ p q {n≢0 = ≢0⇒num≢0 q≢0}  where
+  ≢0⇒num≢0 : {q : ℚ} → q ≢ 0ℚ → isFalse ( ℤ.∣ ↥ q ∣ ≟ℕ 0)
+  ≢0⇒num≢0 {mkℚ (+_ zero)  denominator-1 isCoprime} proof = proof (≃⇒≡ refl)
+  ≢0⇒num≢0 {mkℚ +[1+ n ]   denominator-1 isCoprime} proof = tt
+  ≢0⇒num≢0 {mkℚ (-[1+_] n) denominator-1 isCoprime} proof = tt
+
 
 
 
@@ -61,13 +77,13 @@ data z≢0 : Point → Set where
 ≢0⇒num≢0 {mkℚ (-[1+_] n) denominator-1 isCoprime} proof = tt
 
 
-dualPL : (p : Point) → z≢0 p → Line
-dualPL (mkPoint x y z) (mkz≢0 zNot0) =
-    let
-      num≢0 : isFalse ( ℤ.∣ ↥ z ∣ ≟ℕ 0)
-      num≢0 = ≢0⇒num≢0 zNot0
-    in
-      (_÷_  x z {n≢0 = num≢0}) x+  _÷_  y z {n≢0 = num≢0} y+1=0
+----dualPL : (p : Point) → z≢0 p → Line
+----dualPL (mkPoint x y z) (mkz≢0 zNot0) =
+----    let
+----      num≢0 : isFalse ( ℤ.∣ ↥ z ∣ ≟ℕ 0)
+----      num≢0 = ≢0⇒num≢0 zNot0
+----    in
+----      (_÷ℚ_  x z {n≢0 = num≢0}) x+  _÷ℚ_  y z {n≢0 = num≢0} y+1=0
 
 
 testz≢0 : z≢0 (mkPoint  0ℚ  1ℚ  1ℚ)
@@ -83,7 +99,7 @@ testz≢0 = mkz≢0 λ ()
 --Point to Line
 -- Tim: Cannot work like this. You need an additional argument of type z ≢ 0 
 --dualPL : (p : Point) →  (z≢0 p) → Line
---dualPL (mkPoint a b z) ( mkz≢0 λ ()) = (a ÷ z) x+ (b ÷ z) y+1=0
+--dualPL (mkPoint a b z) ( mkz≢0 λ ()) = (a ÷ℚ z) x+ (b ÷ℚ z) y+1=0
 
 --Line to Point
 dualLP : Line  → Point
@@ -117,18 +133,18 @@ dualLP (a x+ b y+1=0) =  mkPoint a b (normalize 1 1)
 data b≢0 : Line → Set where
   mkb≢0 : ∀ {a b} → (b ≢ 0ℚ) → b≢0 ( a x+ b y+1=0 )
 
-intersecXVal : (l1 : Line) → (b≢0 l1)  → (l2 : Line) → (b≢0 l2)  →  ℚ
-intersecXVal (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0)  (mkb≢0 b2Not0) =
-    let
-      numb1≢0 : isFalse ( ℤ.∣ ↥ b1 ∣ ≟ℕ 0)
-      numb1≢0 = ≢0⇒num≢0 b1Not0
+----intersecXVal : (l1 : Line) → (b≢0 l1)  → (l2 : Line) → (b≢0 l2)  →  ℚ
+----intersecXVal (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0)  (mkb≢0 b2Not0) =
+----    let
+----      numb1≢0 : isFalse ( ℤ.∣ ↥ b1 ∣ ≟ℕ 0)
+----      numb1≢0 = ≢0⇒num≢0 b1Not0
       
-      numb2≢0 : isFalse ( ℤ.∣ ↥ b2 ∣ ≟ℕ 0)
-      numb2≢0 = ≢0⇒num≢0 b2Not0
+----      numb2≢0 : isFalse ( ℤ.∣ ↥ b2 ∣ ≟ℕ 0)
+----      numb2≢0 = ≢0⇒num≢0 b2Not0
       
-    in
-      --(b1 - b2) ÷ ((b1 * b2) * ((a1 ÷ b2) - (a1 ÷ b1)))
-      _÷_ (b1 -ℚ b2) ((b1 *ℚ b2) *ℚ ((_÷_ a1 b2 {n≢0 = numb2≢0}) -ℚ ( _÷_ a1 b1 {n≢0 = numb1≢0})))  
+----   in
+      --(b1 - b2) ÷ℚ ((b1 * b2) * ((a1 ÷ b2) - (a1 ÷ b1)))
+----      _÷ℚ_ (b1 -ℚ b2) ((b1 *ℚ b2) *ℚ ((_÷ℚ_ a1 b2 {n≢0 = numb2≢0}) -ℚ ( _÷ℚ_ a1 b1 {n≢0 = numb1≢0})))  
 
 
 
@@ -138,7 +154,7 @@ intersecXVal (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0)  (mkb≢0 b2Not0
 --      num≢0 : isFalse ( ℤ.∣ ↥ z ∣ ≟ℕ 0)
 --      num≢0 = ≢0⇒num≢0 zNot0
 --    in
---      (_÷_  x z {n≢0 = num≢0}) x+  _÷_  y z {n≢0 = num≢0} y+1=0
+--      (_÷ℚ_  x z {n≢0 = num≢0}) x+  _÷ℚ_  y z {n≢0 = num≢0} y+1=0
 
 -- Idea to solve Problem1: Add a isNotZero function or Type:
 -- data isNotZero : ℚ → Set  where
@@ -160,18 +176,18 @@ intersecXVal (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0)  (mkb≢0 b2Not0
 -- Get Y Value of Intersection Point out of the X Value
 -- Problem1: Prove that b is not 0
 -- Tim: Again, for an arbitrary line this simply isn't true, so you cannot prove it!
-XtoYVal : (l : Line) → (b≢0 l) →  ℚ →  ℚ
-XtoYVal (a x+ b y+1=0) (mkb≢0 bNot0) val = 
-    let
-      numb≢0 : isFalse ( ℤ.∣ ↥ b ∣ ≟ℕ 0)
-      numb≢0 = ≢0⇒num≢0 bNot0
-    in
-        _÷_  ((a *ℚ val) +ℚ (normalize 1 1)) b {n≢0 = numb≢0}
+----XtoYVal : (l : Line) → (b≢0 l) →  ℚ →  ℚ
+----XtoYVal (a x+ b y+1=0) (mkb≢0 bNot0) val = 
+----    let
+----      numb≢0 : isFalse ( ℤ.∣ ↥ b ∣ ≟ℕ 0)
+----      numb≢0 = ≢0⇒num≢0 bNot0
+----    in
+----        _÷ℚ_  ((a *ℚ val) +ℚ (normalize 1 1)) b {n≢0 = numb≢0}
 
 
 
-intersecPoint :  (l1 : Line) → (b≢0 l1)  → (l2 : Line) → (b≢0 l2) → Point
-intersecPoint (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0)  (mkb≢0 b2Not0) = mkPoint (intersecXVal (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0) (mkb≢0 b2Not0)) (XtoYVal  (a1 x+ b1 y+1=0)  (mkb≢0 b1Not0)   (intersecXVal (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0) (mkb≢0 b2Not0)) ) (normalize 1 1)
+----intersecPoint :  (l1 : Line) → (b≢0 l1)  → (l2 : Line) → (b≢0 l2) → Point
+----intersecPoint (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0)  (mkb≢0 b2Not0) = mkPoint (intersecXVal (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0) (mkb≢0 b2Not0)) (XtoYVal  (a1 x+ b1 y+1=0)  (mkb≢0 b1Not0)   (intersecXVal (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0) (mkb≢0 b2Not0)) ) (normalize 1 1)
 
 
 -- Question: can you save parts of the code into variables to make it more readable?
@@ -183,12 +199,15 @@ intersecPoint (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0)  (mkb≢0 b2Not
 --data isOnLine : Point → Line → Set where
 --  base : {a1 b1 a2 b2 : ℚ} → isOnLine (mkPoint a1 b1 (normalize 1 1))  (a2 x+ b2 y+1=0)  --needs additional constraint for a1,b1,a2,b2 {(a1* a2)+(b1*b2)+normalize 1 1 ≃ normalize 0 0} 
 
-data onLineMath : Point → Line → Set where
-  mkOnLineMath : ∀ {a1 b1 a2 b2} (mkPoint a1 b1 c) (a2 x+ b2 y+1=0) → ((a1 *ℚ a2) +ℚ (b1 *ℚ b2) +ℚ (normalize 1 1) ≃ (normalize 0 0) ) 
+--onLineHelp :  Point → Line → Set
+--onLineHelp (mkPoint a1 b1 c) (a2 x+ b2 y+1=0) = ((a1 *ℚ a2) +ℚ (b1 *ℚ b2) +ℚ (normalize 1 1) ≡ (normalize 0 0) ) 
 
-data isOnLine : (p : Point) → (l : Line) → (onLineMath p l) → Set where
-  mkOnLine : ∀ {a1 b1 a2 b2} (mkPoint a1 b1 (normalize 1 1))  (a2 x+ b2 y+1=0)  ((a1 *ℚ a2) +ℚ (b1 *ℚ b2) +ℚ (normalize 1 1) ≃ (normalize 0 0) ) → isOnLine (mkPoint a1 b1 (normalize 1 1))  (a2 x+ b2 y+1=0)
+--data onLineMath : Point → Line → Set → Set where
+--  mkOnLineMath : ∀ {a1 b1 a2 b2 c}→ (mkPoint a1 b1 c) → (a2 x+ b2 y+1=0) → ((a1 *ℚ a2) +ℚ (b1 *ℚ b2) +ℚ (normalize 1 1) ≡ (normalize 0 0) ) → onLineMath (mkPoint a1 b1 c) → (a2 x+ b2 y+1=0)
 
+--data isOnLine : (p : Point) → (l : Line) → (onLineMath p l) → Set where
+  --mkOnLine : ∀ {a1 b1 a2 b2} (mkPoint a1 b1 (normalize 1 1)) → (a2 x+ b2 y+1=0) → ((a1 *ℚ a2) +ℚ (b1 *ℚ b2) +ℚ (normalize 1 1) ≃ (normalize 0 0) ) → isOnLine (mkPoint a1 b1 (normalize 1 1))  (a2 x+ b2 y+1=0)
+--  mkOnLine : (p : Point) → (l : Line) → (onLineMath p l) → isOnLine p l
 
 --needs additional constraint for a1,b1,a2,b2 {(a1* a2)+(b1*b2)+normalize 1 1 ≃ normalize 0 0} 
 
@@ -246,37 +265,61 @@ data True : Set where
 
 -- Define a proof that a given Point is not (0,0,0)
 data not0 : Point → Set  where
-  xNotZero : (x : ℚ) → (¬(x  ≃ 0ℚ)) → (y : ℚ) → (z : ℚ) → not0 (mkPoint x y z)
-  yNotZero : (x : ℚ) → (y : ℚ)  → (¬(y  ≃ 0ℚ)) → (z : ℚ) → not0 (mkPoint x y z)
-  zNotZero : (x : ℚ) → (y : ℚ) → (z : ℚ) → (¬(z  ≃ 0ℚ))  → not0 (mkPoint x y z)
-
+  xNotZero : {x y z : ℚ} → (x ≢ 0ℚ) → not0 (mkPoint x y z)
+  yNotZero : {x y z : ℚ} → (y ≢ 0ℚ) → not0 (mkPoint x y z)
+  zNotZero : {x y z : ℚ} → (z ≢ 0ℚ) → not0 (mkPoint x y z)
 
 --Test proof
 testProof : not0 (mkPoint (normalize 1 2) 0ℚ 0ℚ)
-testProof = xNotZero (normalize 1 2) ProofNot0 0ℚ 0ℚ
+testProof = xNotZero ProofNot0 
   where
-    ProofNot0 : (normalize 1 2)  ≃ 0ℚ → ⊥
-    ProofNot0 ()
+    ProofNot0 : ((normalize 1 2) ≢ 0ℚ)
+    ProofNot0 = λ ()
 
 
---Weiter ohne proof:
+-- Definiere PointNot0
+data PointNot0 : Set where
+  mkPointNot0 : (x y z : ℚ) → not0 (mkPoint x y z) → PointNot0
+
+--Test proof
+testProof2 : PointNot0
+testProof2 =  mkPointNot0 (normalize 4 2) 1ℚ 0ℚ (yNotZero  ( λ () ))
+
 
 data P2 : Set where
   3point : ℚ → ℚ → P2  -- (x,y,1)
   2point : ℚ → P2         -- (x,1,0)
   1point : P2                -- (1,0,0)
 
---Problem: (...  ≃ 0ℚ) bzw. ¬ (...  ≃ 0ℚ) sind keine Funktionen,
---die zum Beispiel true oder false oder ähnliches zurückgeben woran man eine Fallunterscheidung machen kann 
---Idee: Vieleicht neue ≃b und ¬b erstellen, die man zwar weniger Gut für beweise, aber dafür für Fallunterscheidungen nutzen kann?
---true und false müsste man hier auf jeden Fall durch etwas passenderes ersetzen
 
-----pointToP2 : Point → P2
-----pointToP2 (mkPoint x y z) with (¬(z  ≃ 0ℚ))
-----...      | true = 3point (x ÷ z) (y ÷ z)  -- (x,y,1)
-----...      | false with (¬(y  ≃ 0ℚ))
-----         | false | true  = 2point (x ÷ y)  -- (x,1,0)
-----         | false | false                            -- (1,0,0)
+data _or_ (A B : Set) : Set where 
+  inl : A → A or B
+  inr : B → A or B
+
+{-
+dec≡ : (x : ℚ) → (x ≡ 0ℚ)  or  (¬(x  ≡ 0ℚ))
+dec≡ x with (x ≡ 0ℚ)
+... | refl = inl (x ≡ 0ℚ) 
+... | _ = inr  (¬(x  ≡ 0ℚ))
+-}
+
+test : 0ℚ ≡ 0ℚ
+test = refl
+
+{-
+pointToP2 : PointNot0 → P2
+pointToP2 (mkPointNot0 x y z p) with ( dec≡ z )
+...      | (inl (z ≡ 0ℚ) ) true = 3point (x ÷ℚ z) (y ÷ℚ z)  -- (x,y,1)
+...      | (inr (¬(z  ≡ 0ℚ))  with ( dec≡ y )
+         | (inr (¬(z  ≡ 0ℚ)) | (inl (z ≡ 0ℚ) )  = 2point (x ÷ℚ y)  -- (x,1,0)
+         | (inr (¬(z  ≡ 0ℚ)) | (inr (¬(z  ≡ 0ℚ)) = 1point                           -- (1,0,0)
+-}
+
+
+
+ProofTrue :  1ℚ  ≢ 0ℚ
+ProofTrue = λ ()
+
 
 P2toPoint : P2 → Point
 P2toPoint (3point x y) = mkPoint x y 0ℚ
@@ -315,21 +358,31 @@ data 2SP : Set where
   1point- : 2SP                -- (-1,0,0)
 
 
---pointTo2SP : Point → 2SP
---pointTo2SP (mkPoint x y z) with (¬(z  ≃ 0ℚ))
---...      | true with (z ≥ 0ℚ)                                                 -- (x,y,+/-1)
---...      | true | true = 3point+ (x ÷ z) (y ÷ z)                     -- (x,y,+1)
---...      | true | false = 3point- (x ÷ (abs z)) (y ÷ (abs z))   -- (x,y,-1)
+{-
+pointTo2SP : Point → 2SP
+pointTo2SP (mkPoint x y z) with (<-cmp z 0ℚ)
 
---...      | false with (¬(y  ≃ 0ℚ))                      
---...      | false | true  with (y ≥ 0ℚ)                              -- (x,+/-1,0)
---...      | false | true | true =  2point+ (x ÷ y)             -- (x,+1,0)
---...      | false | true | false = 2point- (x ÷ (abs y))      -- (x,-1,0)
+...      | tri> ?  = 3point+ (x ÷ℚ z) (y ÷ℚ z)                     -- (x,y,+1)
+...      | tri< ?  = 3point- (x ÷ℚ (abs z)) (y ÷ℚ (abs z))      -- (x,y,-1)
 
---...      | false | false with (x ≥ 0ℚ)                       -- (+/-1,0,0)
---...      | false | false | true = 1point+                   -- (+/-1,0,0)
---...      | false | false | false = 1point-                    -- (+/-1,0,0)
+...      | tri≈ ? with (<-cmp y 0ℚ)        
+...      | tri≈ ? | tri> ?  =  2point+ (x ÷ℚ y)                     -- (x,+1,0)
+...      | tri≈ ? | tri< ?  = 2point- (x ÷ℚ (abs y))               -- (x,-1,0)
 
+...      | tri≈ ? | tri≈ ? with (<-cmp x 0ℚ)                        -- (+/-1,0,0)
+...      | tri≈ ? | tri≈ ? | tri> ?  = 1point+                      -- (+/-1,0,0)
+...      | tri≈ ? | tri≈ ? | tri< ?  = 1point-                        -- (+/-1,0,0)
+ -}
+
+{-
+Erinnerung : Aufbau von <-cmp
+
+<-cmp : Trichotomous _≡_ _<_
+<-cmp p q with ℤ.<-cmp (↥ p ℤ.* ↧ q) (↥ q ℤ.* ↧ p)
+... | tri< < ≢ ≯ = tri< (*<* <)        (≢ ∘ ≡⇒≃) (≯ ∘ drop-*<*)
+... | tri≈ ≮ ≡ ≯ = tri≈ (≮ ∘ drop-*<*) (≃⇒≡ ≡)   (≯ ∘ drop-*<*)
+... | tri> ≮ ≢ > = tri> (≮ ∘ drop-*<*) (≢ ∘ ≡⇒≃) (*<* >)
+-}
 
 
 2SPtoPoint : 2SP → Point

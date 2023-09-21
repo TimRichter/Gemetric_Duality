@@ -11,7 +11,7 @@ open import Relation.Unary renaming (Decidable to DecidableP)
 open import Data.Nat.Base as ℕ
 open import Data.Nat.Properties renaming (_≟_ to _≟ℕ_ ; _<?_ to _<ℕ?_)
 open import Agda.Builtin.Unit
-
+open import Relation.Binary.Definitions using (Trichotomous ; Tri ; tri< ; tri≈ ; tri> )
 --open import Data.Integer
 --open import Data.Nat
 
@@ -303,8 +303,8 @@ dec≡ x with (x ≡ 0ℚ)
 ... | _ = inr  (¬(x  ≡ 0ℚ))
 -}
 
-test : 0ℚ ≡ 0ℚ
-test = refl
+testRatEqual : 0ℚ ≡ 0ℚ
+testRatEqual = refl
 
 {-
 pointToP2 : PointNot0 → P2
@@ -315,6 +315,17 @@ pointToP2 (mkPointNot0 x y z p) with ( dec≡ z )
          | (inr (¬(z  ≡ 0ℚ)) | (inr (¬(z  ≡ 0ℚ)) = 1point                           -- (1,0,0)
 -}
 
+pointToP2 : PointNot0 → P2
+pointToP2 (mkPointNot0 x y z p) with ( z ≟ℚ 0ℚ )
+... | no z≢0 = 3point (_÷ℚ_ x z {z≢0}) (_÷ℚ_ y z {z≢0})  -- (x,y,1)
+... | yes z≡0 with ( y ≟ℚ 0ℚ )
+...    | no y≢0 = 2point (_÷ℚ_ x y {y≢0})                            -- (x,1,0)
+...    | yes y≡0 with (x ≟ℚ 0ℚ)
+...      | no x≢0 = 1point                                                       -- (1,0,0)
+...      | yes x≡0 with p                                                         -- (0,0,0) p beweist, dass dieser Fall nicht eintritt
+...        | xNotZero x≢0 = ⊥-elim (x≢0 x≡0)
+...        | yNotZero y≢0 = ⊥-elim (y≢0 y≡0)
+...        | zNotZero z≢0 = ⊥-elim (z≢0 z≡0)
 
 
 ProofTrue :  1ℚ  ≢ 0ℚ
@@ -358,31 +369,37 @@ data 2SP : Set where
   1point- : 2SP                -- (-1,0,0)
 
 
-{-
-pointTo2SP : Point → 2SP
-pointTo2SP (mkPoint x y z) with (<-cmp z 0ℚ)
-
-...      | tri> ?  = 3point+ (x ÷ℚ z) (y ÷ℚ z)                     -- (x,y,+1)
-...      | tri< ?  = 3point- (x ÷ℚ (abs z)) (y ÷ℚ (abs z))      -- (x,y,-1)
-
-...      | tri≈ ? with (<-cmp y 0ℚ)        
-...      | tri≈ ? | tri> ?  =  2point+ (x ÷ℚ y)                     -- (x,+1,0)
-...      | tri≈ ? | tri< ?  = 2point- (x ÷ℚ (abs y))               -- (x,-1,0)
-
-...      | tri≈ ? | tri≈ ? with (<-cmp x 0ℚ)                        -- (+/-1,0,0)
-...      | tri≈ ? | tri≈ ? | tri> ?  = 1point+                      -- (+/-1,0,0)
-...      | tri≈ ? | tri≈ ? | tri< ?  = 1point-                        -- (+/-1,0,0)
- -}
+--data name : {z : ℚ} → (z ≢ 0ℚ) → Set where
+  
+testAbsEq : (abs 1ℚ) ≢ 0ℚ
+testAbsEq = λ ()
 
 {-
-Erinnerung : Aufbau von <-cmp
-
-<-cmp : Trichotomous _≡_ _<_
-<-cmp p q with ℤ.<-cmp (↥ p ℤ.* ↧ q) (↥ q ℤ.* ↧ p)
-... | tri< < ≢ ≯ = tri< (*<* <)        (≢ ∘ ≡⇒≃) (≯ ∘ drop-*<*)
-... | tri≈ ≮ ≡ ≯ = tri≈ (≮ ∘ drop-*<*) (≃⇒≡ ≡)   (≯ ∘ drop-*<*)
-... | tri> ≮ ≢ > = tri> (≮ ∘ drop-*<*) (≢ ∘ ≡⇒≃) (*<* >)
+funct : {x : ℚ} →  Set → Set
+funct  (x ≢ 0ℚ) =  ((abs x) ≢ 0ℚ)
 -}
+
+--{(abs z) ≢ 0ℚ}
+
+pointTo2SP : PointNot0 → 2SP
+pointTo2SP (mkPointNot0 x y z p) with (<-cmpℚ z 0ℚ )
+
+...      | (tri> _ z≢0 _)  = 3point+ (_÷ℚ_ x z {z≢0} ) (_÷ℚ_ y z {z≢0} )                     -- (x,y,+1)
+...      | (tri< _ z≢0 _)  = 3point- ( _÷ℚ_ x (abs z)  ) (_÷ℚ_ y (abs z))      -- (x,y,-1)
+
+...      | (tri≈ _ z≡0 _) with (<-cmpℚ y 0ℚ)        
+...            | (tri> _ y≢0 _)  =  2point+ (_÷ℚ_ x y {y≢0})                     -- (x,+1,0)
+...            | (tri< _ y≢0 _)  = 2point- ( _÷ℚ_ x (abs y))               -- (x,-1,0)
+
+...            | (tri≈ _ y≡0 _) with (<-cmpℚ x 0ℚ)                        -- (+/-1,0,0)
+...                   | (tri> _ x≢0 _)  = 1point+                      -- (+/-1,0,0)
+...                   | (tri< _ x≢0 _)  = 1point-                        -- (+/-1,0,0)
+
+...                   | (tri≈ _ x≡0 _)  with p                             -- (0,0,0) p beweist, dass dieser Fall nicht eintritt
+...                          | xNotZero x≢0  = ⊥-elim (x≢0 x≡0)
+...                          | yNotZero y≢0  = ⊥-elim (y≢0 y≡0)
+...                          | zNotZero z≢0  = ⊥-elim (z≢0 z≡0)
+
 
 
 2SPtoPoint : 2SP → Point
@@ -448,6 +465,8 @@ intersec2SP (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0) with (a1 ≃ a2)
 ...                                                                           | false | false --Fall1 oder Fall2 falls (a1÷a2)≃(b1÷b2) also falls die entsprechenden Richtungsvektoren in die selbe richtung zeigen
 -}
 --Ich glaube diesen Aufbau habe ich etwas unnötig komplex gemacht
+
+
 
 
 --Beweis ob ein 2SP-Punkt auf einer Gerade liegt

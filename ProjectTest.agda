@@ -120,7 +120,7 @@ pointToP2 (mkPointNot0 x y z p) with ( z ≟ℚ 0ℚ )
 ...        | zNotZero z≢0 = ⊥-elim (z≢0 z≡0)
 
 
--- Transform P2 into Points
+-- Transform P2 into PointsNot0
 P2toPoint : P2 → PointNot0
 P2toPoint (3point x y) = mkPointNot0 x y 1ℚ (zNotZero  ( λ () ))
 P2toPoint (2point x) = mkPointNot0 x 1ℚ 0ℚ (yNotZero  ( λ () ))
@@ -183,16 +183,59 @@ pointTo2SP (mkPointNot0 x y z p) with (<-cmpℚ z 0ℚ )
 
 
 -- Transform 2SP points into (Not0) points
-2SPtoPoint : 2SP → Point
-2SPtoPoint 1point+ = mkPoint 1ℚ 0ℚ 0ℚ
-2SPtoPoint 1point- = mkPoint (- 1ℚ) 0ℚ 0ℚ
+2SPtoPoint : 2SP → PointNot0
+2SPtoPoint 1point+ = mkPointNot0 1ℚ 0ℚ 0ℚ (xNotZero  ( λ () ))
+2SPtoPoint 1point- = mkPointNot0 (- 1ℚ) 0ℚ 0ℚ (xNotZero  ( λ () ))
 
-2SPtoPoint (2point+ x) = mkPoint x 1ℚ 0ℚ
-2SPtoPoint (2point- x) = mkPoint x (- 1ℚ) 0ℚ
+2SPtoPoint (2point+ x) = mkPointNot0 x 1ℚ 0ℚ (yNotZero  ( λ () ))
+2SPtoPoint (2point- x) = mkPointNot0 x (- 1ℚ) 0ℚ (yNotZero  ( λ () ))
 
-2SPtoPoint (3point+ x y) = mkPoint x y 1ℚ
-2SPtoPoint (3point- x y) = mkPoint x y (- 1ℚ)
+2SPtoPoint (3point+ x y) = mkPointNot0 x y 1ℚ (zNotZero  ( λ () ))
+2SPtoPoint (3point- x y) = mkPointNot0 x y (- 1ℚ) (zNotZero  ( λ () ))
 
+
+--2SP lines
+data 2SPLine : Set where
+  3line+ : ℚ → ℚ → 2SPLine  -- (a,b,1)
+  3line- : ℚ → ℚ → 2SPLine  -- (a,b,-1)
+  
+  2line+ : ℚ → 2SPLine         -- (a,1,0)
+  2line- : ℚ → 2SPLine         -- (a,-1,0)
+  
+  1line+ : 2SPLine                -- (1,0,0)
+  1line- : 2SPLine                -- (-1,0,0)
+
+
+-- Transform 2SP Lines into (Not0) points
+2SPLinetoPoint : 2SPLine → PointNot0
+2SPLinetoPoint 1line+ = mkPointNot0 1ℚ 0ℚ 0ℚ (xNotZero  ( λ () ))
+2SPLinetoPoint 1line- = mkPointNot0 (- 1ℚ) 0ℚ 0ℚ (xNotZero  ( λ () ))
+
+2SPLinetoPoint (2line+ x) = mkPointNot0 x 1ℚ 0ℚ (yNotZero  ( λ () ))
+2SPLinetoPoint (2line- x) = mkPointNot0 x (- 1ℚ) 0ℚ (yNotZero  ( λ () ))
+
+2SPLinetoPoint (3line+ x y) = mkPointNot0 x y 1ℚ (zNotZero  ( λ () ))
+2SPLinetoPoint (3line- x y) = mkPointNot0 x y (- 1ℚ) (zNotZero  ( λ () ))
+
+-- Transform (Not0) points into 2SP pointslines
+pointTo2SPLine : PointNot0 → 2SPLine
+pointTo2SPLine (mkPointNot0 x y z p) with (<-cmpℚ z 0ℚ )
+
+...      | (tri> _ z≢0 _)  = 3line+ (_÷ℚ_ x z {z≢0} ) (_÷ℚ_ y z {z≢0} )                     -- (x,y,+1)
+...      | (tri< _ z≢0 _)  = 3line- ( _÷ℚ_ (- x) z {z≢0}  ) (_÷ℚ_ (- y)  z {z≢0})      -- (x,y,-1)
+
+...      | (tri≈ _ z≡0 _) with (<-cmpℚ y 0ℚ)        
+...            | (tri> _ y≢0 _)  =  2line+ (_÷ℚ_ x y {y≢0})                     -- (x,+1,0)
+...            | (tri< _ y≢0 _)  = 2line- ( _÷ℚ_ (- x)  y {y≢0})               -- (x,-1,0)
+
+...            | (tri≈ _ y≡0 _) with (<-cmpℚ x 0ℚ)                        -- (+/-1,0,0)
+...                   | (tri> _ x≢0 _)  = 1line+                      -- (+/-1,0,0)
+...                   | (tri< _ x≢0 _)  = 1line-                        -- (+/-1,0,0)
+
+...                   | (tri≈ _ x≡0 _)  with p                             -- (0,0,0) p beweist, dass dieser Fall nicht eintritt
+...                          | xNotZero x≢0  = ⊥-elim (x≢0 x≡0)
+...                          | yNotZero y≢0  = ⊥-elim (y≢0 y≡0)
+...                          | zNotZero z≢0  = ⊥-elim (z≢0 z≡0)
 
 
 
@@ -206,6 +249,29 @@ pointTo2SP (mkPointNot0 x y z p) with (<-cmpℚ z 0ℚ )
 
 
 -- Dual functions
+
+dual2SPto2SPLine : 2SP → 2SPLine
+
+dual2SPto2SPLine (3point+ a b) = 3line+ a b
+dual2SPto2SPLine (3point- a b) = 3line- a b
+
+dual2SPto2SPLine (2point+ a ) = 2line+ a 
+dual2SPto2SPLine (2point- a ) = 2line- a 
+
+dual2SPto2SPLine (1point+ ) = 1line+ 
+dual2SPto2SPLine (1point- ) = 1line- 
+
+
+dual2SPLineto2SP : 2SPLine → 2SP
+
+dual2SPLineto2SP (3line+ a b) = 3point+ a b
+dual2SPLineto2SP (3line- a b) = 3point- a b
+
+dual2SPLineto2SP (2line+ a) = 2point+ a
+dual2SPLineto2SP (2line- a) = 2point- a
+
+dual2SPLineto2SP (1line+ ) = 1point+
+dual2SPLineto2SP (1line- ) = 1point- 
 
 -- Dual Lines to 2SP
 dualL2SP : Line  → 2SP
@@ -248,14 +314,53 @@ dualPL (mkPoint x y z) (mkz≢0 zNot0) =
 dualLP : Line  → Point
 dualLP (a x+ b y+1=0) =  mkPoint a b (normalize 1 1) 
 
--- Show that b-value of a line ist not 0
-data b≢0 : Line → Set where
-  mkb≢0 : ∀ {a b} → (b ≢ 0ℚ) → b≢0 ( a x+ b y+1=0 )
 
+
+-- Check if Point is on Line
+
+--data OnLine : 2SP → 2SPLine → Set where
+--mkOnLine :
+
+checkOnLine :  2SP → 2SPLine → Bool
+checkOnLine 2sp 2spLine with 2SPtoPoint 2sp 
+... | mkPointNot0 x1 y1 z1 p1 with 2SPLinetoPoint 2spLine
+...     | mkPointNot0 x2 y2 z2 p2 with (z1 ≟ℚ z2)
+...         | no proof1 = false
+...         | yes proof2 with ( ((x1 *ℚ x2) +ℚ (y1 *ℚ y2) +ℚ 1ℚ) ≟ℚ 0ℚ )
+...              | yes proof3 = true
+...              | no proof4 = false
+
+testProofOnLine : checkOnLine (3point+ 1ℚ (normalize 2 1) ) (3line+ (normalize 3 1) (- (normalize 2 1))) ≡  true
+testProofOnLine = refl
 
 
 -- Calculate Intersection between lines
+-- Case 1: Lines have intersection in ℚ^2
+-- Case 2: Lines intersection at infinity 
+-- Case 3: Lines are identical : Return any point on the lines as intersection point?
 
+IntersectionRational : 2SPLine →  2SPLine → 2SP
+IntersectionRational L1 L2 with 2SPLinetoPoint L1 
+... | mkPointNot0 a1 b1 z1 p1 with 2SPLinetoPoint L2
+...     | mkPointNot0 a2 b2 z2 p2 = let x = (b1 -ℚ b2) ÷ℚ ( (a1 *ℚ b2) -ℚ (a2 -ℚ b1) )
+              in let  y = (b1 -ℚ b2) ÷ℚ ( (a1 *ℚ b2) -ℚ (a2 -ℚ b1) )
+                      in pointTo2SP (mkPointNot0 x y 1ℚ (zNotZero  ( λ () )))
+
+returnIntersection :  2SPLine →  2SPLine → 2SP
+returnIntersection L1 L2 with 2SPLinetoPoint L1 
+... | mkPointNot0 a1 b1 z1 p1 with 2SPLinetoPoint L2
+...     | mkPointNot0 a2 b2 z2 p2 with (z1 ≟ℚ z2)
+...         | yes proof1 with (z1 ≟ℚ 0ℚ )
+...             | yes proof2 = 3point+ 0ℚ 0ℚ
+...             | no proof3 = IntersectionRational L1 L2
+--...       | no proof2 with ...
+
+
+
+
+-- Show that b-value of a line ist not 0
+data b≢0 : Line → Set where
+  mkb≢0 : ∀ {a b} → (b ≢ 0ℚ) → b≢0 ( a x+ b y+1=0 )
 {-
 intersecXVal : (l1 : Line) → (b≢0 l1)  → (l2 : Line) → (b≢0 l2)  →  ℚ
 intersecXVal (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0)  (mkb≢0 b2Not0) =
@@ -269,22 +374,18 @@ intersecXVal (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0)  (mkb≢0 b2Not0
    in
       --(b1 - b2) ÷ℚ ((b1 * b2) * ((a1 ÷ b2) - (a1 ÷ b1)))
       _÷ℚ_ (b1 -ℚ b2) ((b1 *ℚ b2) *ℚ ((_÷ℚ_ a1 b2 {n≢0 = numb2≢0}) -ℚ ( _÷ℚ_ a1 b1 {n≢0 = numb1≢0})))  
--}
+ -}
 
-{-
-data haveIntersection : Line  → Line  →  Set where
-  base : {a1 b1 a2 b2 : ℚ} → haveIntersection  (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0) --need additional constraint for a1,b1,a2,b2 {(a1 ÷ b1) ≃ (a2 ÷ b2) OR b1 ≃ b2 ≃ normalize 0 0} 
--}
 
-{-
+ {-
 XtoYVal : (l : Line) → (b≢0 l) →  ℚ →  ℚ
 XtoYVal (a x+ b y+1=0) (mkb≢0 bNot0) val = 
     let
       numb≢0 : isFalse ( ℤ.∣ ↥ b ∣ ≟ℕ 0)
       numb≢0 = ≢0⇒num≢0 bNot0
     in
-        _÷ℚ_  ((a *ℚ val) +ℚ (normalize 1 1)) b {n≢0 = numb≢0}
--}
+        _÷ℚ_  ((a *ℚ val) +ℚ (normalize 1 1)) b --{n≢0 = numb≢0}
+ -}
 
 {-
 intersecPoint :  (l1 : Line) → (b≢0 l1)  → (l2 : Line) → (b≢0 l2) → Point
@@ -310,22 +411,6 @@ intersec2SP (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0) with (a1 ≃ a2)
 ...                                                                           | false | false                     -- Case 1 or Case 2 if (a1÷a2)≃(b1÷b2) (if directional vectors point in same direction)
 -}
 
-
--- Calculate if Point is on Line
-{-
-onLineHelp :  Point → Line → Set
-onLineHelp (mkPoint a1 b1 c) (a2 x+ b2 y+1=0) = ((a1 *ℚ a2) +ℚ (b1 *ℚ b2) +ℚ (normalize 1 1) ≡ (normalize 0 0) ) 
--}
-
-{-
-data onLineMath : Point → Line → Set → Set where
-  mkOnLineMath : ∀ {a1 b1 a2 b2 c}→ (mkPoint a1 b1 c) → (a2 x+ b2 y+1=0) → ((a1 *ℚ a2) +ℚ (b1 *ℚ b2) +ℚ (normalize 1 1) ≡ (normalize 0 0) ) → onLineMath (mkPoint a1 b1 c) → (a2 x+ b2 y+1=0)
--}
-
-{-
-data isOnLine : (p : Point) → (l : Line) → (onLineMath p l) → Set where
-  --mkOnLine : ∀ {a1 b1 a2 b2} (mkPoint a1 b1 (normalize 1 1)) → (a2 x+ b2 y+1=0) → ((a1 *ℚ a2) +ℚ (b1 *ℚ b2) +ℚ (normalize 1 1) ≃ (normalize 0 0) ) → isOnLine (mkPoint a1 b1 (normalize 1 1))  (a2 x+ b2 y+1=0)
--}
 
 
 

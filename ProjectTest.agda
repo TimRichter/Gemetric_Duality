@@ -157,8 +157,8 @@ data 2SP : Set where
 
 
 -- Prove that if x is not 0, then |x| is also not 0
-absLemma : {x : ℚ} → (x ≢ 0ℚ) → ((abs x) ≢ 0ℚ)
-absLemma  =  {!!}
+--absLemma : {x : ℚ} → (x ≢ 0ℚ) → ((abs x) ≢ 0ℚ)
+--absLemma  =  {!!}
 
 
 -- Transform (Not0) points into 2SP points
@@ -320,7 +320,7 @@ dualLP (a x+ b y+1=0) =  mkPoint a b (normalize 1 1)
 
 --data OnLine : 2SP → 2SPLine → Set where
 --mkOnLine :
-
+{-
 checkOnLine :  2SP → 2SPLine → Bool
 checkOnLine 2sp 2spLine with 2SPtoPoint 2sp 
 ... | mkPointNot0 x1 y1 z1 p1 with 2SPLinetoPoint 2spLine
@@ -329,88 +329,57 @@ checkOnLine 2sp 2spLine with 2SPtoPoint 2sp
 ...         | yes proof2 with ( ((x1 *ℚ x2) +ℚ (y1 *ℚ y2) +ℚ 1ℚ) ≟ℚ 0ℚ )
 ...              | yes proof3 = true
 ...              | no proof4 = false
-
-testProofOnLine : checkOnLine (3point+ 1ℚ (normalize 2 1) ) (3line+ (normalize 3 1) (- (normalize 2 1))) ≡  true
-testProofOnLine = refl
-
-
--- Calculate Intersection between lines
--- Case 1: Lines have intersection in ℚ^2
--- Case 2: Lines intersection at infinity 
--- Case 3: Lines are identical : Return any point on the lines as intersection point?
-
-IntersectionRational : 2SPLine →  2SPLine → 2SP
-IntersectionRational L1 L2 with 2SPLinetoPoint L1 
-... | mkPointNot0 a1 b1 z1 p1 with 2SPLinetoPoint L2
-...     | mkPointNot0 a2 b2 z2 p2 = let x = (b1 -ℚ b2) ÷ℚ ( (a1 *ℚ b2) -ℚ (a2 -ℚ b1) )
-              in let  y = (b1 -ℚ b2) ÷ℚ ( (a1 *ℚ b2) -ℚ (a2 -ℚ b1) )
-                      in pointTo2SP (mkPointNot0 x y 1ℚ (zNotZero  ( λ () )))
-
-returnIntersection :  2SPLine →  2SPLine → 2SP
-returnIntersection L1 L2 with 2SPLinetoPoint L1 
-... | mkPointNot0 a1 b1 z1 p1 with 2SPLinetoPoint L2
-...     | mkPointNot0 a2 b2 z2 p2 with (z1 ≟ℚ z2)
-...         | yes proof1 with (z1 ≟ℚ 0ℚ )
-...             | yes proof2 = 3point+ 0ℚ 0ℚ
-...             | no proof3 = IntersectionRational L1 L2
---...       | no proof2 with ...
-
-
-
-
--- Show that b-value of a line ist not 0
-data b≢0 : Line → Set where
-  mkb≢0 : ∀ {a b} → (b ≢ 0ℚ) → b≢0 ( a x+ b y+1=0 )
-{-
-intersecXVal : (l1 : Line) → (b≢0 l1)  → (l2 : Line) → (b≢0 l2)  →  ℚ
-intersecXVal (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0)  (mkb≢0 b2Not0) =
-    let
-      numb1≢0 : isFalse ( ℤ.∣ ↥ b1 ∣ ≟ℕ 0)
-      numb1≢0 = ≢0⇒num≢0 b1Not0
-      
-      numb2≢0 : isFalse ( ℤ.∣ ↥ b2 ∣ ≟ℕ 0)
-      numb2≢0 = ≢0⇒num≢0 b2Not0
-      
-   in
-      --(b1 - b2) ÷ℚ ((b1 * b2) * ((a1 ÷ b2) - (a1 ÷ b1)))
-      _÷ℚ_ (b1 -ℚ b2) ((b1 *ℚ b2) *ℚ ((_÷ℚ_ a1 b2 {n≢0 = numb2≢0}) -ℚ ( _÷ℚ_ a1 b1 {n≢0 = numb1≢0})))  
- -}
-
-
- {-
-XtoYVal : (l : Line) → (b≢0 l) →  ℚ →  ℚ
-XtoYVal (a x+ b y+1=0) (mkb≢0 bNot0) val = 
-    let
-      numb≢0 : isFalse ( ℤ.∣ ↥ b ∣ ≟ℕ 0)
-      numb≢0 = ≢0⇒num≢0 bNot0
-    in
-        _÷ℚ_  ((a *ℚ val) +ℚ (normalize 1 1)) b --{n≢0 = numb≢0}
- -}
-
-{-
-intersecPoint :  (l1 : Line) → (b≢0 l1)  → (l2 : Line) → (b≢0 l2) → Point
-intersecPoint (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0)  (mkb≢0 b2Not0) = mkPoint (intersecXVal (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0) (mkb≢0 b2Not0)) (XtoYVal  (a1 x+ b1 y+1=0)  (mkb≢0 b1Not0)   (intersecXVal (a1 x+ b1 y+1=0) (mkb≢0 b1Not0) (a2 x+ b2 y+1=0) (mkb≢0 b2Not0)) ) (normalize 1 1)
 -}
 
+checkOnLine :  2SP → 2SPLine → Bool
+checkOnLine 2sp 2spLine with 2SPtoPoint 2sp 
+...     | mkPointNot0 x1 y1 z1 p1 with 2SPLinetoPoint 2spLine
+...          | mkPointNot0 x2 y2 z2 p2 with ( ((x1 *ℚ x2) +ℚ (y1 *ℚ y2) +ℚ z2 ) ≟ℚ 0ℚ )
+...                         | yes proof1 = true
+...                         | no proof2 = false
 
--- Find intersection between two lines
--- Case 1: Lines have intersection in ℚ^2
--- Case 2: Lines intersection at infinity 
--- Case 3: Lines are identical : Return any point on the lines as intersection point?
-{-
-intersec2SP : Line → Line → 2SP
-intersec2SP (a1 x+ b1 y+1=0) (a2 x+ b2 y+1=0) with (a1 ≃ a2)
-...                                                                           | true
-...                                                                           | true  with (b1 ≃ b2)
-...                                                                           | true | true                     -- Case 3
-...                                                                           | true | false                     -- Case 1
+-- point(4,-3,1) line(2,3,1) +1
+testProofOnLine1 : checkOnLine (3point+ (normalize 4 1)  (- (normalize 3 1) )) (3line+ (normalize 2 1)  (normalize 3 1) ) ≡  true
+testProofOnLine1 = refl
 
-...                                                                           | false
-...                                                                           | false with (b1 ≃ b2)
-...                                                                           | false | true                     -- Case1
-...                                                                           | false | false                     -- Case 1 or Case 2 if (a1÷a2)≃(b1÷b2) (if directional vectors point in same direction)
--}
+-- point(0,1,0) line(1,0,0) +0
+testProofOnLine2 : checkOnLine (2point+ 0ℚ ) (1line+ ) ≡  true
+testProofOnLine2 = refl
+
+-- point(-2,1,0) line(2,3,1) +1
+testProofOnLine3 : checkOnLine (2point+ (- (normalize 2 1) )) (3line+  (normalize 2 1) (normalize 3 1)) ≡  true
+testProofOnLine3 = refl
+
+-- point(6,4,1) line(2/3,1,0) +0
+testProofOnLine4 : checkOnLine (3point+ (normalize 6 1) (- (normalize 4 1))) (2line+ (normalize 2 3) ) ≡  true
+testProofOnLine4 = refl
 
 
 
+-- Intersection between lines:
 
+
+-- Cross product
+
+-- Proof that two Points don't have a crossProduct of (0,0,0)
+data xProductNot0 : (p1 : PointNot0) → (p2 : PointNot0) → Set where
+   mkxProductNot0 : {x1 y1 z1 x2 y2 z2 : ℚ} → {proof1 :  not0 (mkPoint x1 y1 z1)} → {proof2 :  not0 (mkPoint x2 y2 z2)} →  not0 (mkPoint (y1 *ℚ z2 -ℚ z1 *ℚ y2) (z1 *ℚ x2 -ℚ x1 *ℚ z2) (x1 *ℚ y2 -ℚ y1 +ℚ x2) ) → xProductNot0 (mkPointNot0 x1 y1 z1 proof1) (mkPointNot0 x2 y2 z2 proof2)
+
+
+xProduct : (p1 : PointNot0) → (p2 : PointNot0) → (xProductNot0 p1 p2) → PointNot0
+xProduct p1 p2 xPNot0 with p1
+...   | (mkPointNot0 x1 y1 z1 pr1) with p2
+...         | (mkPointNot0 x2 y2 z2 pr2) with xPNot0
+...                | (mkxProductNot0 proof ) = mkPointNot0 (y1 *ℚ z2 -ℚ z1 *ℚ y2) (z1 *ℚ x2 -ℚ x1 *ℚ z2) (x1 *ℚ y2 -ℚ y1 +ℚ x2) proof
+
+
+--testProof cross product of (2,2,1) and (-2,0,1) is (2, -4, 4)
+testProofxProduct :  xProduct (mkPointNot0 (normalize 2 1) (normalize 2 1) 1ℚ (xNotZero  ( λ () )) )  (mkPointNot0 (- (normalize 2 1)) 0ℚ 1ℚ (xNotZero  ( λ () )) )  (mkxProductNot0 {!not0 (mkPoint (normalize 2 1 *ℚ 1ℚ -ℚ 1ℚ *ℚ 0ℚ) (1ℚ *ℚ - normalize 2 1 -ℚ normalize 2 1 *ℚ 1ℚ) (normalize 2 1 *ℚ 0ℚ -ℚ normalize 2 1 +ℚ - normalize 2 1))!}) ≡  mkPointNot0 (normalize 2 1) (- (normalize 4 1)) 1ℚ (xNotZero  ( λ () ))
+testProofxProduct = {!refl!}
+
+
+-- Calculate Intersection between lines:
+intersection : 2SPLine → 2SPLine → 2SP
+intersection L1 L2 with (2SPLinetoPoint L1)
+...   | mkPointNot0 x1 y1 z1 p1 with (2SPLinetoPoint L2)
+...          | mkPointNot0 x2 y2 z2 p2 = pointTo2SP (xProduct (mkPointNot0 x1 y1 z1 p1) (mkPointNot0 x2 y2 z2 p2) (mkxProductNot0 ({! not0 (mkPoint (y1 *ℚ z2 -ℚ z1 *ℚ y2) (z1 *ℚ x2 -ℚ x1 *ℚ z2) (x1 *ℚ y2 -ℚ y1 +ℚ x2))!} ) ) )

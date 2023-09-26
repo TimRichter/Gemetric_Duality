@@ -12,6 +12,7 @@ open import Data.Nat.Base as ℕ
 open import Data.Nat.Properties renaming (_≟_ to _≟ℕ_ ; _<?_ to _<ℕ?_)
 open import Agda.Builtin.Unit
 open import Relation.Binary.Definitions using (Trichotomous ; Tri ; tri< ; tri≈ ; tri> )
+open import Function.Base
 --open import Data.Integer
 --open import Data.Nat
 
@@ -419,6 +420,9 @@ testProofIntersection2 : 2SPtoPoint (  intersection (3line+ (- normalize 1 5) (n
 testProofIntersection2 = mk~ (- 1ℚ) refl
 
 
+--testProof
+testProof~ : {x : PointNot0} → ( (2SPtoPoint ∘ pointTo2SP)  x) ~ x
+testProof~ = {!!}
 
 ------------
 -- Reminder: First three lemmata of the paper

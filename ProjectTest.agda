@@ -1,5 +1,5 @@
 open import Data.Rational renaming (_*_ to _*ℚ_ ; _+_ to _+ℚ_ ; _-_ to _-ℚ_ ; _÷_ to _÷ℚ'_ ;
-                                    _≟_ to _≟ℚ_)
+                                    _≟_ to _≟ℚ_ ; _>_ to _>ℚ_)
 open import Data.Rational.Properties renaming (<-cmp to <-cmpℚ)
 open import Relation.Nullary
 open import Data.Bool hiding (_<?_)
@@ -40,16 +40,16 @@ data Point : Set where
   mkPoint :   ℚ  →  ℚ  →  ℚ   → Point
 
 -- get X value from Point
-getXValP : Point →   ℚ
-getXValP (mkPoint x y z) = x
+X : Point →   ℚ
+X (mkPoint x y z) = x
 
 -- get Y value from Point
-getYValP : Point →   ℚ
-getYValP (mkPoint x y z) = y
+Y : Point →   ℚ
+Y (mkPoint x y z) = y
 
 -- get Z value from Point
-getZValP : Point →   ℚ
-getZValP (mkPoint x y z) = z
+Z : Point →   ℚ
+Z (mkPoint x y z) = z
 
 
 -- Define 2D Line (Idea: basically same structure as Points but verry different interpretation)
@@ -57,12 +57,12 @@ data Line : Set where
   _x+_y+1=0 :   ℚ  →  ℚ   → Line
 
 -- Get a-value of Line
-getAValL : Line → ℚ
-getAValL (a x+ b y+1=0) = a
+A : Line → ℚ
+A (a x+ b y+1=0) = a
 
 -- Get b-value of Line
-getBValL : Line → ℚ
-getBValL (a x+ b y+1=0) = b
+B : Line → ℚ
+B (a x+ b y+1=0) = b
 
 
 
@@ -82,9 +82,9 @@ testProofz≢0 = mkz≢0 λ ()
 
 -- Define a proof that a given Point is not (0,0,0)
 data not0 : Point → Set  where
-  xNotZero : {x y z : ℚ} → (x ≢ 0ℚ) → not0 (mkPoint x y z)
-  yNotZero : {x y z : ℚ} → (y ≢ 0ℚ) → not0 (mkPoint x y z)
-  zNotZero : {x y z : ℚ} → (z ≢ 0ℚ) → not0 (mkPoint x y z)
+  xNotZero : {p : Point} → (X p ≢ 0ℚ) → not0 p
+  yNotZero : {p : Point} → (Y p ≢ 0ℚ) → not0 p
+  zNotZero : {p : Point} → (Z p ≢ 0ℚ) → not0 p
 
 --Test proof Not0
 testProofNot0 : not0 (mkPoint (normalize 1 2) 0ℚ 0ℚ)
@@ -96,12 +96,20 @@ testProofNot0 = xNotZero ProofNot0
 
 -- Define PointNot0 which acts similar to normal Points but excludes (0,0,0)
 data PointNot0 : Set where
-  mkPointNot0 : (x y z : ℚ) → not0 (mkPoint x y z) → PointNot0
+  mkPointNot0 : (p  : Point) → (not0 p) → PointNot0
 
 -- Test proof PointNot0
 testProofPointNot0 : PointNot0
-testProofPointNot0 =  mkPointNot0 (normalize 4 2) 1ℚ 0ℚ (yNotZero  ( λ () ))
+testProofPointNot0 =  mkPointNot0 (mkPoint (normalize 4 2) 1ℚ 0ℚ) (yNotZero  ( λ () ))
 
+-- PointNot0 to Point
+P : PointNot0 → Point
+P (mkPointNot0  (mkPoint x y z) p) = mkPoint x y z
+
+-- Point to PointNot0
+pToNot0 : (p : Point) → (not0 p)  → PointNot0
+pToNot0 (mkPoint x y z) proof = mkPointNot0  (mkPoint x y z) proof
+--does not work yet--pToNot0 p proof = mkPointNot0 (mkPoint (X p) (Y p) (Z p)) proof
 
 -- Define P2 Points
 -- Here every point has exactly one notation
@@ -114,7 +122,7 @@ data P2 : Set where
 
 -- Transform PointNot0 into P2
 pointToP2 : PointNot0 → P2
-pointToP2 (mkPointNot0 x y z p) with ( z ≟ℚ 0ℚ )
+pointToP2 (mkPointNot0 (mkPoint  x y z) p) with ( z ≟ℚ 0ℚ )
 ... | no z≢0 = 3point (_÷ℚ_ x z {z≢0}) (_÷ℚ_ y z {z≢0})  -- (x,y,1)
 ... | yes z≡0 with ( y ≟ℚ 0ℚ )
 ...    | no y≢0 = 2point (_÷ℚ_ x y {y≢0})                            -- (x,1,0)
@@ -128,9 +136,9 @@ pointToP2 (mkPointNot0 x y z p) with ( z ≟ℚ 0ℚ )
 
 -- Transform P2 into PointsNot0
 P2toPoint : P2 → PointNot0
-P2toPoint (3point x y) = mkPointNot0 x y 1ℚ (zNotZero  ( λ () ))
-P2toPoint (2point x) = mkPointNot0 x 1ℚ 0ℚ (yNotZero  ( λ () ))
-P2toPoint 1point = mkPointNot0 1ℚ 0ℚ 0ℚ (xNotZero  ( λ () ))
+P2toPoint (3point x y) = mkPointNot0  (mkPoint x y 1ℚ) (zNotZero  ( λ () ))
+P2toPoint (2point x) = mkPointNot0  (mkPoint x 1ℚ 0ℚ) (yNotZero  ( λ () ))
+P2toPoint 1point = mkPointNot0  (mkPoint 1ℚ 0ℚ 0ℚ) (xNotZero  ( λ () ))
 
 
 -- example for nondecidable (unary) predicate
@@ -162,7 +170,7 @@ data 2SP : Set where
 
 -- Transform (Not0) points into 2SP points
 pointTo2SP : PointNot0 → 2SP
-pointTo2SP (mkPointNot0 x y z p) with (<-cmpℚ z 0ℚ )
+pointTo2SP (mkPointNot0  (mkPoint x y z) p) with (<-cmpℚ z 0ℚ )
 
 ...      | (tri> _ z≢0 _)  = 3point+ (_÷ℚ_ x z {z≢0} ) (_÷ℚ_ y z {z≢0} )                     -- (x,y,+1)
 ...      | (tri< _ z≢0 _)  = 3point- ( _÷ℚ_ (- x) z {z≢0}  ) (_÷ℚ_ (- y)  z {z≢0})      -- (x,y,-1)
@@ -183,14 +191,14 @@ pointTo2SP (mkPointNot0 x y z p) with (<-cmpℚ z 0ℚ )
 
 -- Transform 2SP points into (Not0) points
 2SPtoPoint : 2SP → PointNot0
-2SPtoPoint 1point+ = mkPointNot0 1ℚ 0ℚ 0ℚ (xNotZero  ( λ () ))
-2SPtoPoint 1point- = mkPointNot0 (- 1ℚ) 0ℚ 0ℚ (xNotZero  ( λ () ))
+2SPtoPoint 1point+ = mkPointNot0  (mkPoint 1ℚ 0ℚ 0ℚ) (xNotZero  ( λ () ))
+2SPtoPoint 1point- = mkPointNot0  (mkPoint (- 1ℚ) 0ℚ 0ℚ) (xNotZero  ( λ () ))
 
-2SPtoPoint (2point+ x) = mkPointNot0 x 1ℚ 0ℚ (yNotZero  ( λ () ))
-2SPtoPoint (2point- x) = mkPointNot0 x (- 1ℚ) 0ℚ (yNotZero  ( λ () ))
+2SPtoPoint (2point+ x) = mkPointNot0  (mkPoint x 1ℚ 0ℚ) (yNotZero  ( λ () ))
+2SPtoPoint (2point- x) = mkPointNot0  (mkPoint x (- 1ℚ) 0ℚ) (yNotZero  ( λ () ))
 
-2SPtoPoint (3point+ x y) = mkPointNot0 x y 1ℚ (zNotZero  ( λ () ))
-2SPtoPoint (3point- x y) = mkPointNot0 x y (- 1ℚ) (zNotZero  ( λ () ))
+2SPtoPoint (3point+ x y) = mkPointNot0  (mkPoint x y 1ℚ) (zNotZero  ( λ () ))
+2SPtoPoint (3point- x y) = mkPointNot0  (mkPoint x y (- 1ℚ)) (zNotZero  ( λ () ))
 
 
 --2SP lines
@@ -207,18 +215,18 @@ data 2SPLine : Set where
 
 -- Transform 2SP Lines into (Not0) points
 2SPLinetoPoint : 2SPLine → PointNot0
-2SPLinetoPoint 1line+ = mkPointNot0 1ℚ 0ℚ 0ℚ (xNotZero  ( λ () ))
-2SPLinetoPoint 1line- = mkPointNot0 (- 1ℚ) 0ℚ 0ℚ (xNotZero  ( λ () ))
+2SPLinetoPoint 1line+ = mkPointNot0  (mkPoint 1ℚ 0ℚ 0ℚ) (xNotZero  ( λ () ))
+2SPLinetoPoint 1line- = mkPointNot0  (mkPoint (- 1ℚ) 0ℚ 0ℚ) (xNotZero  ( λ () ))
 
-2SPLinetoPoint (2line+ x) = mkPointNot0 x 1ℚ 0ℚ (yNotZero  ( λ () ))
-2SPLinetoPoint (2line- x) = mkPointNot0 x (- 1ℚ) 0ℚ (yNotZero  ( λ () ))
+2SPLinetoPoint (2line+ x) = mkPointNot0  (mkPoint x 1ℚ 0ℚ) (yNotZero  ( λ () ))
+2SPLinetoPoint (2line- x) = mkPointNot0  (mkPoint x (- 1ℚ) 0ℚ) (yNotZero  ( λ () ))
 
-2SPLinetoPoint (3line+ x y) = mkPointNot0 x y 1ℚ (zNotZero  ( λ () ))
-2SPLinetoPoint (3line- x y) = mkPointNot0 x y (- 1ℚ) (zNotZero  ( λ () ))
+2SPLinetoPoint (3line+ x y) = mkPointNot0  (mkPoint x y 1ℚ) (zNotZero  ( λ () ))
+2SPLinetoPoint (3line- x y) = mkPointNot0  (mkPoint x y (- 1ℚ)) (zNotZero  ( λ () ))
 
 -- Transform (Not0) points into 2SP pointslines
 pointTo2SPLine : PointNot0 → 2SPLine
-pointTo2SPLine (mkPointNot0 x y z p) with (<-cmpℚ z 0ℚ )
+pointTo2SPLine (mkPointNot0  (mkPoint x y z) p) with (<-cmpℚ z 0ℚ )
 
 ...      | (tri> _ z≢0 _)  = 3line+ (_÷ℚ_ x z {z≢0} ) (_÷ℚ_ y z {z≢0} )                     -- (x,y,+1)
 ...      | (tri< _ z≢0 _)  = 3line- ( _÷ℚ_ (- x) z {z≢0}  ) (_÷ℚ_ (- y)  z {z≢0})      -- (x,y,-1)
@@ -288,6 +296,7 @@ dual2SPL (3point- a b) = (- a) x+ (- b) y+1=0
 ≢0⇒num≢0 {mkℚ (-[1+_] n) denominator-1 isCoprime} proof = tt
 
 
+
 -- Dual points to lines
 {-
 dualPL : (p : Point) → z≢0 p → Line
@@ -304,26 +313,20 @@ dualLP : Line  → Point
 dualLP (a x+ b y+1=0) =  mkPoint a b (normalize 1 1) 
 
 
+-- Dot product
+_∙_ : Point -> Point -> ℚ               
+p1 ∙ p2 = ( (X p1 *ℚ X p2) +ℚ (Y p1 *ℚ Y p2) +ℚ (Z p1 *ℚ Z p2) )
+
+-- Cross product
+_×_ : Point -> Point -> Point 
+p1 × p2 = mkPoint (Y p1 *ℚ Z p2 -ℚ Z p1 *ℚ Y p2) (Z p1 *ℚ X p2 -ℚ X p1 *ℚ Z p2) (X p1 *ℚ Y p2 -ℚ Y p1 *ℚ X p2)
+
 
 -- Check if Point is on Line
-
---data OnLine : 2SP → 2SPLine → Set where
---mkOnLine :
-{-
 checkOnLine :  2SP → 2SPLine → Bool
 checkOnLine 2sp 2spLine with 2SPtoPoint 2sp 
-... | mkPointNot0 x1 y1 z1 p1 with 2SPLinetoPoint 2spLine
-...     | mkPointNot0 x2 y2 z2 p2 with (z1 ≟ℚ z2)
-...         | no proof1 = false
-...         | yes proof2 with ( ((x1 *ℚ x2) +ℚ (y1 *ℚ y2) +ℚ 1ℚ) ≟ℚ 0ℚ )
-...              | yes proof3 = true
-...              | no proof4 = false
--}
-
-checkOnLine :  2SP → 2SPLine → Bool
-checkOnLine 2sp 2spLine with 2SPtoPoint 2sp 
-...     | mkPointNot0 x1 y1 z1 p1 with 2SPLinetoPoint 2spLine
-...          | mkPointNot0 x2 y2 z2 p2 with ( ((x1 *ℚ x2) +ℚ (y1 *ℚ y2) +ℚ (z1 *ℚ z2) ) ≟ℚ 0ℚ )
+...     | p1 with 2SPLinetoPoint 2spLine
+...          | p2 with ( (P p1) ∙ (P p2) ) ≟ℚ 0ℚ 
 ...                         | yes proof1 = true
 ...                         | no proof2 = false
 
@@ -353,30 +356,33 @@ testProofOnLine5 = refl
 
 -- Stronger equality
 infix 4 _==_
-data _==_ :  (p1 : PointNot0) → (p2 : PointNot0) → Set where
-  mk== : {x y z : ℚ} → {p1 :  not0 (mkPoint x y z)} → {p2 :  not0 (mkPoint x y z)} → ( (mkPointNot0 x y z p1) == (mkPointNot0 x y z p2) )
+_==_ : PointNot0 → PointNot0 → Set
+p == q  = P p ≡ P q
 
 --Testproof (2,1,0) == (2,1,0)
-testProof1== : (mkPointNot0 (normalize 2 1) 1ℚ 0ℚ (xNotZero λ ()) ) == (mkPointNot0 (normalize 2 1) 1ℚ 0ℚ (xNotZero λ ()) )
-testProof1== = mk== 
+testProof1== : (mkPointNot0  (mkPoint (normalize 2 1) 1ℚ 0ℚ) (xNotZero λ ()) ) == (mkPointNot0  (mkPoint (normalize 2 1) 1ℚ 0ℚ) (xNotZero λ ()) )
+testProof1== = refl
 
 --Testproof (2,1,0) == (6,3,0)
-testProof2== : ( (mkPointNot0 (normalize 2 1) 1ℚ 0ℚ (xNotZero λ ()) ) == (mkPointNot0 (normalize 6 1) (normalize 3 1) 0ℚ (xNotZero λ ()) ) ) → ⊥
+testProof2== : ( (mkPointNot0  (mkPoint (normalize 2 1) 1ℚ 0ℚ) (xNotZero λ ()) ) == (mkPointNot0  (mkPoint (normalize 6 1) (normalize 3 1) 0ℚ) (xNotZero λ ()) ) ) → ⊥
 testProof2== = λ ()
+
+-- Scalar multiplication
+_⋆_  : ℚ → Point → Point
+q  ⋆  p =  mkPoint  (q *ℚ X p) (q *ℚ Y p) (q *ℚ Z p)
 
 -- Weaker equality
 infix 4 _~_
 data _~_ :  (p1 : PointNot0) → (p2 : PointNot0) → Set where
- mk~ : {x1 y1 z1 x2 y2 z2 : ℚ} → {p1 :  not0 (mkPoint x1 y1 z1)} → {p2 :  not0 (mkPoint x2 y2 z2)}  → (lamb : ℚ) → ( (abs (x1 -ℚ (x2 *ℚ lamb))) +ℚ (abs (y1 -ℚ (y2 *ℚ lamb))) +ℚ (abs (z1 -ℚ (z2 *ℚ lamb))) ≃ 0ℚ ) → ( (mkPointNot0 x1 y1 z1 p1) ~ (mkPointNot0 x2 y2 z2 p2) )
-
+  mk~ : {p1 p2 : Point} → {proof1 :  not0 p1} → {proof2 :  not0 p2} → (lamb : ℚ) → (lamb >ℚ 0ℚ) → ( (lamb ⋆ p1) ≡ p2 ) → ( (pToNot0 p1 proof1) ~ (pToNot0 p2 proof2) )
 
 --Testproof (2,1,0) ~ (2,1,0)
-testProof1~ : (mkPointNot0 (normalize 2 1) 1ℚ 0ℚ (xNotZero λ ()) ) ~ (mkPointNot0 (normalize 2 1) 1ℚ 0ℚ (xNotZero λ ()) )
-testProof1~ = mk~ 1ℚ refl 
+testProof1~ : (mkPointNot0  (mkPoint (normalize 2 1) 1ℚ 0ℚ) (xNotZero λ ()) ) ~ (mkPointNot0  (mkPoint (normalize 2 1) 1ℚ 0ℚ) (xNotZero λ ()) )
+testProof1~ = mk~ 1ℚ (*<* (ℤ.+<+ (s≤s z≤n))) refl 
 
 --Testproof (2,1,0) ~ (6,3,0)
-testProof2~ : ( (mkPointNot0 (normalize 2 1) 1ℚ 0ℚ (xNotZero λ ()) ) ~ (mkPointNot0 (normalize 6 1) (normalize 3 1) 0ℚ (xNotZero λ ()) ) )
-testProof2~ = mk~ (normalize 1 3) refl 
+testProof2~ : ( (mkPointNot0  (mkPoint (normalize 2 1) 1ℚ 0ℚ) (xNotZero λ ()) ) ~ (mkPointNot0  (mkPoint (normalize 6 1) (normalize 3 1) 0ℚ) (xNotZero λ ()) ) )
+testProof2~ = mk~ (normalize 3 1) (*<* (ℤ.+<+ (s≤s z≤n))) refl 
 
 
 
@@ -385,28 +391,28 @@ testProof2~ = mk~ (normalize 1 3) refl
 
 -- Cross product
 
+
 -- Proof that two Points don't have a crossProduct of (0,0,0)
-data xProductNot0 : (p1 : PointNot0) → (p2 : PointNot0) → Set where
-   mkxProductNot0 : {x1 y1 z1 x2 y2 z2 : ℚ} → {proof1 :  not0 (mkPoint x1 y1 z1)} → {proof2 :  not0 (mkPoint x2 y2 z2)} →  not0 (mkPoint (y1 *ℚ z2 -ℚ z1 *ℚ y2) (z1 *ℚ x2 -ℚ x1 *ℚ z2) (x1 *ℚ y2 -ℚ y1 *ℚ x2) ) → xProductNot0 (mkPointNot0 x1 y1 z1 proof1) (mkPointNot0 x2 y2 z2 proof2)
+data xProductNot0 : PointNot0 →  PointNot0 → Set where
+  mkxProductNot0 : {x1 y1 z1 x2 y2 z2 : ℚ} → {proof1 :  not0 (mkPoint x1 y1 z1)} → {proof2 :  not0 (mkPoint x2 y2 z2)} →  not0 (mkPoint (y1 *ℚ z2 -ℚ z1 *ℚ y2) (z1 *ℚ x2 -ℚ x1 *ℚ z2) (x1 *ℚ y2 -ℚ y1 *ℚ x2) ) → xProductNot0 (mkPointNot0  (mkPoint x1 y1 z1) proof1) (mkPointNot0  (mkPoint x2 y2 z2) proof2)
+--does not work yet--  mkxProductNot0 : {p1 p2 : Point} → {proof1 :  not0 p1} → {proof2 :  not0 p2} →  not0 (p1 × p2  ) → xProductNot0 (pToNot0 p1 proof1) (pToNot0 p2 proof2)
 
 
 xProduct : (p1 : PointNot0) → (p2 : PointNot0) → (xProductNot0 p1 p2) → PointNot0
-xProduct p1 p2 xPNot0 with p1
-...   | (mkPointNot0 x1 y1 z1 pr1) with p2
-...         | (mkPointNot0 x2 y2 z2 pr2) with xPNot0
-...                | (mkxProductNot0 proof ) = mkPointNot0 (y1 *ℚ z2 -ℚ z1 *ℚ y2) (z1 *ℚ x2 -ℚ x1 *ℚ z2) (x1 *ℚ y2 -ℚ y1 *ℚ x2) proof
+xProduct p1 p2 xPNot0 with xPNot0
+...     | (mkxProductNot0 proof ) = pToNot0 ( (P p1) × (P p2) ) proof
 
 
 -- testProof cross product of (2,2,1) and (-2,0,1) is (2, -4, 4)
-testProofxProduct :  ( xProduct (mkPointNot0 (normalize 2 1) (normalize 2 1) 1ℚ (xNotZero  ( λ () )) )  (mkPointNot0 (- (normalize 2 1)) 0ℚ 1ℚ (xNotZero  ( λ () )) )  (mkxProductNot0 (xNotZero ( λ () ))) ) ==  ( mkPointNot0 (normalize 2 1) (- (normalize 4 1))  (normalize 4 1) (xNotZero  ( λ () )) )
-testProofxProduct = mk==
+testProofxProduct :  ( xProduct (mkPointNot0  (mkPoint (normalize 2 1) (normalize 2 1) 1ℚ) (xNotZero  ( λ () )) )  (mkPointNot0  (mkPoint (- (normalize 2 1)) 0ℚ 1ℚ) (xNotZero  ( λ () )) )  (mkxProductNot0 (xNotZero  ( λ () )  )) ) ==  ( mkPointNot0  (mkPoint (normalize 2 1) (- (normalize 4 1))  (normalize 4 1)) (xNotZero  ( λ () )) )
+testProofxProduct = refl
 
 
 -- Calculate Intersection between lines:
 intersection : (l1 : 2SPLine) → (l2 : 2SPLine) → (xProductNot0 (2SPLinetoPoint l1) (2SPLinetoPoint l2)) → 2SP
 intersection L1 L2 p with (2SPLinetoPoint L1)
-...   | mkPointNot0 x1 y1 z1 p1 with (2SPLinetoPoint L2)
-...          | mkPointNot0 x2 y2 z2 p2 = pointTo2SP (xProduct (mkPointNot0 x1 y1 z1 p1) (mkPointNot0 x2 y2 z2 p2) p )
+...   | mkPointNot0  (mkPoint x1 y1 z1) p1 with (2SPLinetoPoint L2)
+...          | mkPointNot0  (mkPoint x2 y2 z2) p2 = pointTo2SP (xProduct (mkPointNot0  (mkPoint x1 y1 z1) p1) (mkPointNot0  (mkPoint x2 y2 z2) p2) p )
 
 
 -- testProof line(- 1, 0, 1) line(0, -1/2, 1) point(1, 2, 1)
@@ -416,8 +422,11 @@ testProofIntersection1 = refl
 -- testProof line(- 1/5, 1/10, 1) line(0, 1/2, 1) Point(4, -2, 1)
 -- Problem:  (3point-  -4 2) ≡ (3point+  4 -2) is not true
 -- Solution? transform both 2SP points to PointNot0 and compare with ~?
-testProofIntersection2 : 2SPtoPoint (  intersection (3line+ (- normalize 1 5) (normalize 1 10)) (3line+ 0ℚ (normalize 1 2)) (mkxProductNot0 (xNotZero ( λ () )) )  ) ~ 2SPtoPoint (  3point+ (normalize 4 1) (- (normalize 2 1))  )
-testProofIntersection2 = mk~ (- 1ℚ) refl
+-- This does not work anymore, since ~ uses only positive lambda. intersection line(- 1/5, 1/10, 1) line(0, 1/2, 1) = Point(-2/5, 1/5, 1)
+-- But Point(-2/5, 1/5, 1) ~ (4, -2, 1) is only true for negative lambdas
+--testProofIntersection2 : 2SPtoPoint (  intersection (3line+ (- normalize 1 5) (normalize 1 10)) (3line+ 0ℚ (normalize 1 2)) (mkxProductNot0 (xNotZero ( λ () )) )  ) ~ 2SPtoPoint (  3point+ (normalize 4 1) (- (normalize 2 1))  )
+--testProofIntersection2 = mk~ (- 1ℚ) (*<* {!!})  refl
+
 
 
 --testProof
@@ -429,7 +438,7 @@ testProof~ = {!!}
 
 
 -- Lemma 1: If a point p lies on a line L, then the dual of that line dL lies on the dual of that point dp
-lemma1 : {x1 y1 z1 x2 y2 z2 : ℚ} → {p1 :  not0 (mkPoint x1 y1 z1)} → {p2 :  not0 (mkPoint x2 y2 z2)} → ((checkOnLine (pointTo2SP (mkPointNot0 x1 y1 z1 p1)) (pointTo2SPLine (mkPointNot0 x2 y2 z2 p2)) ) ≡ true) -> ((checkOnLine (dual2SPLineto2SP (pointTo2SPLine (mkPointNot0 x2 y2 z2 p2)) ) (dual2SPto2SPLine (pointTo2SP (mkPointNot0 x1 y1 z1 p1)) ) ) ≡ true)
+lemma1 : {x1 y1 z1 x2 y2 z2 : ℚ} → {p1 :  not0 (mkPoint x1 y1 z1)} → {p2 :  not0 (mkPoint x2 y2 z2)} → ((checkOnLine (pointTo2SP (mkPointNot0  (mkPoint x1 y1 z1) p1)) (pointTo2SPLine (mkPointNot0  (mkPoint x2 y2 z2) p2)) ) ≡ true) -> ((checkOnLine (dual2SPLineto2SP (pointTo2SPLine (mkPointNot0  (mkPoint x2 y2 z2) p2)) ) (dual2SPto2SPLine (pointTo2SP (mkPointNot0  (mkPoint x1 y1 z1) p1)) ) ) ≡ true)
 lemma1 x = {!!}
 
 

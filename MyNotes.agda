@@ -1,5 +1,5 @@
 open import Data.Rational renaming (_*_ to _*ℚ_ ; _+_ to _+ℚ_ ; _-_ to _-ℚ_ ; _÷_ to _÷ℚ'_ ;
-                                    _≟_ to _≟ℚ_)
+                                    _≟_ to _≟ℚ_ ; 1/_ to invℚ)
 open import Data.Rational.Properties renaming (<-cmp to <-cmpℚ)
 open import Relation.Nullary
 open import Data.Bool hiding (_<?_ ; _<_)
@@ -19,16 +19,16 @@ open import Function.Base
 
 
 
+≢0⇒num≢0 : {q : ℚ} → q ≢ 0ℚ → isFalse ( ℤ.∣ ↥ q ∣ ≟ℕ 0)
+≢0⇒num≢0 {mkℚ (+_ zero)  denominator-1 isCoprime} proof = proof (≃⇒≡ refl)
+≢0⇒num≢0 {mkℚ +[1+ n ]   denominator-1 isCoprime} proof = tt
+≢0⇒num≢0 {mkℚ (-[1+_] n) denominator-1 isCoprime} proof = tt
 
 
 infixl 7 _÷ℚ_
 
 _÷ℚ_ : (p q : ℚ) → {q≢0 : q ≢ 0ℚ} → ℚ
-_÷ℚ_ p q {q≢0} = _÷ℚ'_ p q {n≢0 = ≢0⇒num≢0 q≢0}  where
-  ≢0⇒num≢0 : {q : ℚ} → q ≢ 0ℚ → isFalse ( ℤ.∣ ↥ q ∣ ≟ℕ 0)
-  ≢0⇒num≢0 {mkℚ (+_ zero)  denominator-1 isCoprime} proof = proof (≃⇒≡ refl)
-  ≢0⇒num≢0 {mkℚ +[1+ n ]   denominator-1 isCoprime} proof = tt
-  ≢0⇒num≢0 {mkℚ (-[1+_] n) denominator-1 isCoprime} proof = tt
+_÷ℚ_ p q {q≢0} = _÷ℚ'_ p q {n≢0 = ≢0⇒num≢0 q≢0}
 
 
 --Define absolute Value of a rational Number
@@ -67,7 +67,7 @@ abs>0 {z} z≢0 with (<-cmpℚ 0ℚ z)
 
 
 -- whenever z ≢ 0,  1 / abs z  > 0
-invabs>0 : {z : ℚ} → (z≢0 : z ≢ 0ℚ) → 1/ (abs z) > 0ℚ
+invabs>0 : {z : ℚ} → (z≢0 : z ≢ 0ℚ) → invℚ (abs z) > 0ℚ
 invabs>0 {z} z≢0 = positive⁻¹ (pos⇒1/pos (abs z) (positive (abs>0 z≢0)))
 
 
@@ -85,11 +85,20 @@ z<0⇒z≢0 {z} p with (<-cmpℚ 0ℚ z)
 ... | tri≈ _ _ ¬c = ⊥-elim (¬c p)
 ... | tri> _ ¬b _ = ¬b ∘ sym
 
--- when z > 0, (1/ abs z) * z ≡ 1
-z>0=⇒1 : {z : ℚ} → (z>0 : z > 0ℚ) → (_÷ℚ_ 1ℚ (abs z) {z≢0⇒absz≢0 (z>0⇒z≢0 z>0)}) *ℚ z ≡ 1ℚ -- ) ≡ 1ℚ
+
+-- this is a mess... we should use our _÷ℚ_ and show that 1 ÷ℚ z  is a multipl. inverse of z...
+
+-- when z > 0, (1/ abs z) * z ≡ 1  -- z≢0⇒absz≢0 (z>0⇒z≢0 z>0)
+z>0=⇒1 : {z : ℚ} → (z>0 : z > 0ℚ) → (invℚ (abs z) {≢0⇒num≢0(z≢0⇒absz≢0 (z>0⇒z≢0 z>0))}) *ℚ z ≡ 1ℚ -- ) ≡ 1ℚ
 z>0=⇒1 {z} z>0 with (<-cmpℚ 0ℚ z)
-... | tri< _ _ _ = {!!}   -- t.b.c.
-... | tri≈ _ _ _ = {!!}
-... | tri> _ _ _ = {!!}
+... | tri< _ _ _ =  {!!}
+{-
+  (_÷ℚ_ 1ℚ z {z>0⇒z≢0 z>0} ) *ℚ z
+    ≡⟨ {!!} ⟩
+  1ℚ
+    ∎   where open ≡-Reasoning
+    -}
+... | tri≈ ¬z>0 _ _ = ⊥-elim (¬z>0 z>0)
+... | tri> ¬z>0 _ _ = ⊥-elim (¬z>0 z>0)
 
 -- when z < 0, (1/ abs z) * z ≡ - 1

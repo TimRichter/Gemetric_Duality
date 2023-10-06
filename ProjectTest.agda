@@ -8,7 +8,7 @@ open import Relation.Binary.PropositionalEquality
 open import Data.Integer.Base as ℤ using (ℤ; +_; +0; -[1+_])
 open import Relation.Nullary.Decidable renaming (False to isFalse ; True to isTrue)
 open import Relation.Unary renaming (Decidable to DecidableP)
-open import Data.Nat.Base as ℕ
+open import Data.Nat.Base as ℕ 
 open import Data.Nat.Properties renaming (_≟_ to _≟ℕ_ ; _<?_ to _<ℕ?_)
 open import Agda.Builtin.Unit
 open import Relation.Binary.Definitions using (Trichotomous ; Tri ; tri< ; tri≈ ; tri> )
@@ -268,22 +268,22 @@ pointTo2SPLine (mkPointNot0  (mkPoint x y z) p) with (<-cmpℚ z 0ℚ )
 -- Negate orientation
 anti2SP  :   2SP → 2SP
 anti2SP 1point+ = 1point-
-anti2SP (2point+ a) = (2point- a)
-anti2SP (3point+ a b) = (3point- a b)
+anti2SP (2point+ a) = (2point- (- a))
+anti2SP (3point+ a b) = (3point- (- a) (- b))
 
 anti2SP 1point- = 1point+
-anti2SP (2point- a) = (2point+ a)
-anti2SP (3point- a b) = (3point+ a b)
+anti2SP (2point- a) = (2point+ (- a))
+anti2SP (3point- a b) = (3point+ (- a) (- b))
 
 
 anti2SPLine : 2SPLine → 2SPLine
 anti2SPLine 1line+ = 1line-
-anti2SPLine (2line+ a) = (2line- a)
-anti2SPLine (3line+ a b) = (3line- a b)
+anti2SPLine (2line+ a) = (2line- (- a))
+anti2SPLine (3line+ a b) = (3line- (- a) (- b))
 
 anti2SPLine 1line- = 1line+
-anti2SPLine (2line- a) = (2line+ a)
-anti2SPLine (3line- a b) = (3line+ a b)
+anti2SPLine (2line- a) = (2line+ (- a))
+anti2SPLine (3line- a b) = (3line+ (- a) (- b))
 
 
 
@@ -369,8 +369,41 @@ p1 × p2 = mkPoint (Y p1 *ℚ Z p2 -ℚ Z p1 *ℚ Y p2) (Z p1 *ℚ X p2 -ℚ X p
 
 
 -- Properties _∙_
-∙Linear1 : (p1 p2 : Point) -> (μ : ℚ) -> ( (μ ⋆ p1) ∙ (p2) ) ≡  ( μ ⋆ ( (p1) ∙ (p2) ) )
-∙Linear1 p1 p2 x = ?
+-- Addition is left assoziative (infixl)
+test : (x y z : ℚ) -> (x +ℚ y +ℚ z ) ≡ ( (x +ℚ y) +ℚ z)
+test x y z = refl
+
+--Multiplication is left assoziative (infixl)
+test2 : (x y z : ℚ) -> (x *ℚ y *ℚ z ) ≡ ( (x *ℚ y) *ℚ z)
+test2 x y z = refl
+
+postulate
+  *ℚ-distribˡ-+ℚ : (x y z : ℚ) -> (x *ℚ (y +ℚ z) ) ≡ (x *ℚ y +ℚ x *ℚ z )
+  *ℚ-assoc : (x y z : ℚ) -> ((x *ℚ y) *ℚ z ) ≡ (x *ℚ (y *ℚ z) )
+  neg-distribˡ-* : (p q : ℚ) -> - (p *ℚ q) ≡ ((- p) *ℚ q)
+  *ℚ-identityˡ : (q : ℚ) -> 1ℚ *ℚ q ≡ q
+
+∙Linear1 : (p1 p2 : Point) -> (μ : ℚ) -> ( (μ ⋆ p1) ∙ (p2) ) ≡  ( μ *ℚ ( (p1) ∙ (p2) ) )
+∙Linear1 (mkPoint x₁ x₂ x₃) (mkPoint x₄ x₅ x₆) μ = 
+  (((μ ⋆ mkPoint x₁ x₂ x₃) ∙ mkPoint x₄ x₅ x₆)) ≡⟨ refl ⟩
+   ((( mkPoint (μ *ℚ x₁) (μ *ℚ x₂) (μ *ℚ x₃) ) ∙ mkPoint x₄ x₅ x₆)) ≡⟨ refl ⟩
+    ( (μ *ℚ x₁) *ℚ x₄ )   +ℚ ( (μ *ℚ x₂) *ℚ x₅ ) +ℚ  ((μ *ℚ x₃) *ℚ x₆ )
+    ≡⟨ cong (λ x → ((μ *ℚ x₁) *ℚ x₄ )   +ℚ ( (μ *ℚ x₂) *ℚ x₅ ) +ℚ x) (*ℚ-assoc μ x₃ x₆) ⟩
+    ( (μ *ℚ x₁) *ℚ x₄ )   +ℚ ( (μ *ℚ x₂) *ℚ x₅ ) +ℚ  (μ *ℚ (x₃ *ℚ x₆))
+    ≡⟨ cong (λ x → ( (μ *ℚ x₁) *ℚ x₄ )   +ℚ x +ℚ  (μ *ℚ (x₃ *ℚ x₆))) (*ℚ-assoc μ x₂ x₅) ⟩
+     ( (μ *ℚ x₁) *ℚ x₄ )   +ℚ ( μ *ℚ (x₂ *ℚ x₅) ) +ℚ  (μ *ℚ (x₃ *ℚ x₆))
+     ≡⟨ cong (λ x →  x  +ℚ ( μ *ℚ (x₂ *ℚ x₅) ) +ℚ  (μ *ℚ (x₃ *ℚ x₆))) (*ℚ-assoc μ x₁ x₄) ⟩
+    (μ *ℚ  ( x₁ *ℚ x₄ ) ) +ℚ (μ *ℚ (x₂ *ℚ x₅) )  +ℚ (μ *ℚ (x₃ *ℚ x₆)) 
+     ≡⟨ cong (λ x → x +ℚ (μ *ℚ (x₃ *ℚ x₆))) (sym (*ℚ-distribˡ-+ℚ μ (( x₁ *ℚ x₄ )) ((x₂ *ℚ x₅)))) ⟩
+   μ *ℚ  (( x₁ *ℚ x₄ ) +ℚ ( x₂ *ℚ x₅ )) +ℚ (μ *ℚ (x₃ *ℚ x₆)) 
+     ≡⟨ sym (*ℚ-distribˡ-+ℚ μ (( x₁ *ℚ x₄ ) +ℚ ( x₂ *ℚ x₅ ))  (x₃ *ℚ x₆) )  ⟩
+   μ *ℚ ( ( x₁ *ℚ x₄ ) +ℚ ( x₂ *ℚ x₅ ) +ℚ  (x₃ *ℚ x₆ ) ) ≡⟨ refl ⟩
+  μ *ℚ (mkPoint x₁ x₂ x₃ ∙ mkPoint x₄ x₅ x₆) ∎
+  where open ≡-Reasoning
+
+--  f≡g x               ≡⟨ sym (trans-reflʳ _) ⟩
+--  trans (f≡g x) refl  ∎
+--  where open ≡-Reasoning
 
 -- Check if Point is on Line
 checkOnLine :  2SP → 2SPLine → Bool
@@ -379,15 +412,170 @@ checkOnLine 2sp 2spLine with ( (P (2SPtoPoint 2sp)) ∙ (P (2SPLinetoPoint 2spLi
 ...     | no proof2 = false
 
 meets : 2SP → 2SPLine → Set
-meets p l =   (P (2SPtoPoint p)) ∙ (P (2SPLinetoPoint l))  ≡ 0ℚ 
+meets p l =   (P (2SPtoPoint p)) ∙ (P (2SPLinetoPoint l))  ≡ 0ℚ
+
+
+-- Anti Lemma Point
+antiLemma : (p : 2SP) →  (P (2SPtoPoint (anti2SP p))) ≡  (- 1ℚ) ⋆ (P (2SPtoPoint p ))
+antiLemma (3point+ a b) =
+   mkPoint (- a) (- b) (- 1ℚ)
+     ≡⟨ cong (λ x → mkPoint (- x) (- b) (- 1ℚ) ) ( (sym (*ℚ-identityˡ a) )) ⟩
+   mkPoint (- (1ℚ *ℚ a)) (- b) (- 1ℚ)
+     ≡⟨ cong (λ x → mkPoint (- (1ℚ *ℚ a)) (- x) (- 1ℚ) ) ( (sym (*ℚ-identityˡ b) )) ⟩
+   mkPoint (- (1ℚ *ℚ a)) (- (1ℚ *ℚ b)) (- 1ℚ)
+     ≡⟨ cong (λ x → mkPoint x  (- (1ℚ *ℚ b)) (- 1ℚ)) ((neg-distribˡ-* 1ℚ a)) ⟩
+   mkPoint (- (1ℚ) *ℚ a) (- (1ℚ *ℚ b)) (- 1ℚ)
+     ≡⟨ cong (λ x → mkPoint  (- (1ℚ) *ℚ a) x (- 1ℚ)) ((neg-distribˡ-* 1ℚ b)) ⟩
+   mkPoint (- (1ℚ) *ℚ a) (- (1ℚ) *ℚ b) (- 1ℚ)
+     ≡⟨ refl ⟩
+  ((- 1ℚ) ⋆ mkPoint a b 1ℚ)
+  ∎
+  where open ≡-Reasoning
+antiLemma (3point- a b) =
+   mkPoint (- a) (- b) 1ℚ
+     ≡⟨ cong (λ x → mkPoint (- x) (- b) 1ℚ)  ( (sym (*ℚ-identityˡ a) )) ⟩
+   mkPoint (- (1ℚ *ℚ a)) (- b) 1ℚ
+     ≡⟨ cong (λ x → mkPoint (- (1ℚ *ℚ a)) (- x) 1ℚ ) ( (sym (*ℚ-identityˡ b) )) ⟩
+   mkPoint (- (1ℚ *ℚ a)) (- (1ℚ *ℚ b)) 1ℚ
+     ≡⟨ cong (λ x → mkPoint x  (- (1ℚ *ℚ b)) 1ℚ) ((neg-distribˡ-* 1ℚ a)) ⟩
+   mkPoint (- (1ℚ) *ℚ a) (- (1ℚ *ℚ b)) 1ℚ
+     ≡⟨ cong (λ x → mkPoint  (- (1ℚ) *ℚ a) x 1ℚ) ((neg-distribˡ-* 1ℚ b)) ⟩
+   mkPoint (- (1ℚ) *ℚ a) (- (1ℚ) *ℚ b) 1ℚ
+     ≡⟨ refl ⟩
+  ((- 1ℚ) ⋆ mkPoint a b (- 1ℚ))
+  ∎
+  where open ≡-Reasoning
+antiLemma (2point+ a) =
+  mkPoint (- a) (- 1ℚ) 0ℚ
+  ≡⟨ cong (λ x → mkPoint (- x) (- 1ℚ) 0ℚ) (sym (*ℚ-identityˡ a)) ⟩
+  mkPoint (- (1ℚ *ℚ a)) (- 1ℚ) 0ℚ
+    ≡⟨ cong (λ x → mkPoint x (- 1ℚ) 0ℚ) (neg-distribˡ-* 1ℚ a) ⟩
+  mkPoint ((- 1ℚ) *ℚ a) (- 1ℚ) 0ℚ
+    ≡⟨ refl ⟩
+  (- 1ℚ) ⋆ mkPoint a 1ℚ 0ℚ
+  ∎
+  where open ≡-Reasoning
+antiLemma (2point- a) =
+  mkPoint (- a) 1ℚ 0ℚ
+  ≡⟨ cong (λ x → mkPoint (- x) 1ℚ 0ℚ) (sym (*ℚ-identityˡ a)) ⟩
+  mkPoint (- (1ℚ *ℚ a)) 1ℚ 0ℚ
+    ≡⟨ cong (λ x → mkPoint x 1ℚ 0ℚ) (neg-distribˡ-* 1ℚ a) ⟩
+  mkPoint ((- 1ℚ) *ℚ a) 1ℚ 0ℚ
+    ≡⟨ refl ⟩
+  (- 1ℚ) ⋆ mkPoint a (- 1ℚ) 0ℚ
+  ∎
+  where open ≡-Reasoning
+antiLemma 1point+ = refl
+antiLemma 1point- = refl
+
+
+-- Anti Lemma Line
+antiLemmaLine : (l : 2SPLine) →  (P (2SPLinetoPoint (anti2SPLine l))) ≡  (- 1ℚ) ⋆ (P (2SPLinetoPoint l ))
+antiLemmaLine (3line+ a b) =
+   mkPoint (- a) (- b) (- 1ℚ)
+     ≡⟨ cong (λ x → mkPoint (- x) (- b) (- 1ℚ) ) ( (sym (*ℚ-identityˡ a) )) ⟩
+   mkPoint (- (1ℚ *ℚ a)) (- b) (- 1ℚ)
+     ≡⟨ cong (λ x → mkPoint (- (1ℚ *ℚ a)) (- x) (- 1ℚ) ) ( (sym (*ℚ-identityˡ b) )) ⟩
+   mkPoint (- (1ℚ *ℚ a)) (- (1ℚ *ℚ b)) (- 1ℚ)
+     ≡⟨ cong (λ x → mkPoint x  (- (1ℚ *ℚ b)) (- 1ℚ)) ((neg-distribˡ-* 1ℚ a)) ⟩
+   mkPoint (- (1ℚ) *ℚ a) (- (1ℚ *ℚ b)) (- 1ℚ)
+     ≡⟨ cong (λ x → mkPoint  (- (1ℚ) *ℚ a) x (- 1ℚ)) ((neg-distribˡ-* 1ℚ b)) ⟩
+   mkPoint (- (1ℚ) *ℚ a) (- (1ℚ) *ℚ b) (- 1ℚ)
+     ≡⟨ refl ⟩
+  ((- 1ℚ) ⋆ mkPoint a b 1ℚ)
+  ∎
+  where open ≡-Reasoning
+antiLemmaLine (3line- a b) =
+   mkPoint (- a) (- b) 1ℚ
+     ≡⟨ cong (λ x → mkPoint (- x) (- b) 1ℚ)  ( (sym (*ℚ-identityˡ a) )) ⟩
+   mkPoint (- (1ℚ *ℚ a)) (- b) 1ℚ
+     ≡⟨ cong (λ x → mkPoint (- (1ℚ *ℚ a)) (- x) 1ℚ ) ( (sym (*ℚ-identityˡ b) )) ⟩
+   mkPoint (- (1ℚ *ℚ a)) (- (1ℚ *ℚ b)) 1ℚ
+     ≡⟨ cong (λ x → mkPoint x  (- (1ℚ *ℚ b)) 1ℚ) ((neg-distribˡ-* 1ℚ a)) ⟩
+   mkPoint (- (1ℚ) *ℚ a) (- (1ℚ *ℚ b)) 1ℚ
+     ≡⟨ cong (λ x → mkPoint  (- (1ℚ) *ℚ a) x 1ℚ) ((neg-distribˡ-* 1ℚ b)) ⟩
+   mkPoint (- (1ℚ) *ℚ a) (- (1ℚ) *ℚ b) 1ℚ
+     ≡⟨ refl ⟩
+  ((- 1ℚ) ⋆ mkPoint a b (- 1ℚ))
+  ∎
+  where open ≡-Reasoning
+antiLemmaLine (2line+ a) =
+  mkPoint (- a) (- 1ℚ) 0ℚ
+  ≡⟨ cong (λ x → mkPoint (- x) (- 1ℚ) 0ℚ) (sym (*ℚ-identityˡ a)) ⟩
+  mkPoint (- (1ℚ *ℚ a)) (- 1ℚ) 0ℚ
+    ≡⟨ cong (λ x → mkPoint x (- 1ℚ) 0ℚ) (neg-distribˡ-* 1ℚ a) ⟩
+  mkPoint ((- 1ℚ) *ℚ a) (- 1ℚ) 0ℚ
+    ≡⟨ refl ⟩
+  (- 1ℚ) ⋆ mkPoint a 1ℚ 0ℚ
+  ∎
+  where open ≡-Reasoning
+antiLemmaLine (2line- a) =
+  mkPoint (- a) 1ℚ 0ℚ
+  ≡⟨ cong (λ x → mkPoint (- x) 1ℚ 0ℚ) (sym (*ℚ-identityˡ a)) ⟩
+  mkPoint (- (1ℚ *ℚ a)) 1ℚ 0ℚ
+    ≡⟨ cong (λ x → mkPoint x 1ℚ 0ℚ) (neg-distribˡ-* 1ℚ a) ⟩
+  mkPoint ((- 1ℚ) *ℚ a) 1ℚ 0ℚ
+    ≡⟨ refl ⟩
+  (- 1ℚ) ⋆ mkPoint a (- 1ℚ) 0ℚ
+  ∎
+  where open ≡-Reasoning
+antiLemmaLine 1line+ = refl
+antiLemmaLine 1line- = refl
+
 
 
 meetsAntiLemma1  :   {p : 2SP} → {l : 2SPLine} →  meets p l  → meets (anti2SP p) l
-meetsAntiLemma1 x = {!!}
+meetsAntiLemma1 {p} {l} m =
+  ( (P (2SPtoPoint (anti2SP p))) ∙ (P (2SPLinetoPoint l)) )
+                ≡⟨ cong (λ x → ( x ∙ (P (2SPLinetoPoint l)) )) (antiLemma p) ⟩
+  ( ((- 1ℚ) ⋆ (P (2SPtoPoint p ))) ∙ (P (2SPLinetoPoint l)) )
+                ≡⟨ ∙Linear1 ((P (2SPtoPoint p ))) ((P (2SPLinetoPoint l))) ((- 1ℚ))  ⟩
+  (- 1ℚ) *ℚ ( ( (P (2SPtoPoint p ))) ∙ (P (2SPLinetoPoint l)) )
+                ≡⟨ cong (λ x →  (- 1ℚ) *ℚ x) m ⟩
+  (- 1ℚ) *ℚ 0ℚ
+                ≡⟨ refl ⟩
+  0ℚ
+  ∎
+  where open ≡-Reasoning
+
+-- ∙-symmetry
+postulate
+  *ℚ-comm : (a b : ℚ) → a *ℚ b ≡ b *ℚ a
+
+∙-sym : (p1 p2 : Point) → p1 ∙ p2 ≡ p2 ∙ p1
+∙-sym (mkPoint x1 y1 z1) (mkPoint x2 y2 z2) =
+   (x1 *ℚ x2) +ℚ (y1 *ℚ y2) +ℚ (z1 *ℚ z2)
+     ≡⟨ cong (λ x →  x +ℚ (y1 *ℚ y2) +ℚ (z1 *ℚ z2)) (*ℚ-comm x1 x2) ⟩
+   (x2 *ℚ x1) +ℚ (y1 *ℚ y2) +ℚ (z1 *ℚ z2)
+     ≡⟨ cong (λ x →  (x2 *ℚ x1) +ℚ x +ℚ (z1 *ℚ z2)) (*ℚ-comm y1 y2) ⟩
+   (x2 *ℚ x1) +ℚ (y2 *ℚ y1) +ℚ (z1 *ℚ z2)
+     ≡⟨ cong (λ x → (x2 *ℚ x1) +ℚ (y2 *ℚ y1) +ℚ x) (*ℚ-comm z1 z2) ⟩                          
+   (x2 *ℚ x1) +ℚ (y2 *ℚ y1) +ℚ (z2 *ℚ z1)
+     ∎
+  where open ≡-Reasoning
 
 
 meetsAntiLemma2  :   {p : 2SP} → {l : 2SPLine} →  meets p l  → meets p (anti2SPLine l)
-meetsAntiLemma2 x = {!!}
+meetsAntiLemma2 {p} {l} m =
+  ( (P (2SPtoPoint  p)) ∙ (P (2SPLinetoPoint (anti2SPLine l))) )
+                ≡⟨ cong (λ x → (( (P (2SPtoPoint  p)) ∙ x ))) (antiLemmaLine l) ⟩
+  ( (P (2SPtoPoint  p)) ∙ ((- 1ℚ) ⋆ (P (2SPLinetoPoint l))) )
+                ≡⟨ ∙-sym (P (2SPtoPoint  p)) ((- 1ℚ) ⋆ (P (2SPLinetoPoint l)))  ⟩
+  ( ((- 1ℚ) ⋆ (P (2SPLinetoPoint l)))  ∙ (P (2SPtoPoint  p)) )
+                ≡⟨ ∙Linear1 ((P (2SPLinetoPoint l))) ((P (2SPtoPoint  p))) ((- 1ℚ)) ⟩
+  (- 1ℚ) *ℚ ( ( (P (2SPLinetoPoint l)))  ∙ (P (2SPtoPoint  p)) )
+                ≡⟨  (cong (λ x → (- 1ℚ) *ℚ x) (∙-sym (P (2SPLinetoPoint l)) (P (2SPtoPoint  p)))) ⟩
+  (- 1ℚ) *ℚ (P (2SPtoPoint  p)) ∙ ( ( (P (2SPLinetoPoint l))) )
+                ≡⟨ cong (λ x → (- 1ℚ) *ℚ x) m ⟩                 
+  (- 1ℚ) *ℚ 0ℚ
+                ≡⟨ refl ⟩
+  0ℚ
+  ∎
+  where open ≡-Reasoning
+
+--antiLemma : (p : 2SP) →  (P (2SPtoPoint (anti2SP p))) ≡  (- 1ℚ) ⋆ (P (2SPtoPoint p ))
+--meets p l =   (P (2SPtoPoint p)) ∙ (P (2SPLinetoPoint l))  ≡ 0ℚ
+--∙Linear1 : (p1 p2 : Point) -> (μ : ℚ) -> ( (μ ⋆ p1) ∙ (p2) ) ≡  ( μ *ℚ ( (p1) ∙ (p2) ) )
 
 
 -- Orientation
@@ -397,10 +585,8 @@ sameWay p l =   (P (2SPtoPoint p)) ∙ (P (2SPLinetoPoint l))  >ℚ 0ℚ
 oppositeWay : 2SP → 2SPLine → Set
 oppositeWay p l =   (P (2SPtoPoint p)) ∙ (P (2SPLinetoPoint l)) <ℚ 0ℚ
 
-
 sameAntiLemma : {p : 2SP} -> {l : 2SPLine} ->  sameWay p l -> oppositeWay  p (anti2SPLine l)
 sameAntiLemma x = {!!}
-
 
 
 -- point(4,-3,1) line(2,3,1) +1
@@ -465,7 +651,7 @@ testProof2~ = mk~ (normalize 3 1) (*<* (ℤ.+<+ (s≤s z≤n))) refl
 
 -- Proof that two Points don't have a crossProduct of (0,0,0)
 data xProductNot0 : PointNot0 →  PointNot0 → Set where
-  mkxProductNot0 : {x1 y1 z1 x2 y2 z2 : ℚ} → {proof1 :  not0 (mkPoint x1 y1 z1)} → {proof2 :  not0 (mkPoint x2 y2 z2)} →  not0 (mkPoint (y1 *ℚ z2 -ℚ z1 *ℚ y2) (z1 *ℚ x2 -ℚ x1 *ℚ z2) (x1 *ℚ y2 -ℚ y1 *ℚ x2) ) → xProductNot0 (mkPointNot0  (mkPoint x1 y1 z1) proof1) (mkPointNot0  (mkPoint x2 y2 z2) proof2)
+     mkxProductNot0 : {p1 p2 : PointNot0} → not0 (P p1 × P p2) → xProductNot0 p1 p2
 --does not work yet--  mkxProductNot0 : {p1 p2 : Point} → {proof1 :  not0 p1} → {proof2 :  not0 p2} →  not0 (p1 × p2  ) → xProductNot0 (pToNot0 p1 proof1) (pToNot0 p2 proof2)
 
 
@@ -479,11 +665,14 @@ testProofxProduct :  ( xProduct (mkPointNot0  (mkPoint (normalize 2 1) (normaliz
 testProofxProduct = refl
 
 
+-- Calculate line connecting two points:
+connectingLine : (p1 p2 : 2SP) → (xProductNot0 (2SPtoPoint p1) (2SPtoPoint p2)) → 2SPLine
+connectingLine p1 p2 xNot0 = pointTo2SPLine (xProduct (2SPtoPoint p1) (2SPtoPoint p2) xNot0)
+
+
 -- Calculate Intersection between lines:
-intersection : (l1 : 2SPLine) → (l2 : 2SPLine) → (xProductNot0 (2SPLinetoPoint l1) (2SPLinetoPoint l2)) → 2SP
-intersection L1 L2 p with (2SPLinetoPoint L1)
-...   | mkPointNot0  (mkPoint x1 y1 z1) p1 with (2SPLinetoPoint L2)
-...          | mkPointNot0  (mkPoint x2 y2 z2) p2 = pointTo2SP (xProduct (mkPointNot0  (mkPoint x1 y1 z1) p1) (mkPointNot0  (mkPoint x2 y2 z2) p2) p )
+intersection : (l1 l2 : 2SPLine) → (xProductNot0 (2SPLinetoPoint l1) (2SPLinetoPoint l2)) → 2SP
+intersection L1 L2 xNot0  = pointTo2SP (xProduct (2SPLinetoPoint L1) (2SPLinetoPoint L2) xNot0 )
 
 
 -- testProof line(- 1, 0, 1) line(0, -1/2, 1) point(1, 2, 1)
@@ -512,12 +701,21 @@ testProof~2 = mk~ 1ℚ (*<* (ℤ.+<+ (s≤s z≤n))) refl
 
 
 -- Lemma 1: If a point p lies on a line L, then the dual of that line dL lies on the dual of that point dp
--- (checkOnLine P(x1,y1,z1,p1) L(x2,y2,z2,p2) ≡ true) → checkOnLine (dual L(x2,y2,z2,p2)) (dual P(x1,y1,z1,p1)) ≡ true
-lemma1 : {x1 y1 z1 x2 y2 z2 : ℚ} → {p1 :  not0 (mkPoint x1 y1 z1)} → {p2 :  not0 (mkPoint x2 y2 z2)} → ((checkOnLine (pointTo2SP (mkPointNot0  (mkPoint x1 y1 z1) p1)) (pointTo2SPLine (mkPointNot0  (mkPoint x2 y2 z2) p2)) ) ≡ true) → ((checkOnLine (dual2SPLineto2SP (pointTo2SPLine (mkPointNot0  (mkPoint x2 y2 z2) p2)) ) (dual2SPto2SPLine (pointTo2SP (mkPointNot0  (mkPoint x1 y1 z1) p1)) ) ) ≡ true)
-lemma1 x = {!!}
+--lemma11 : (p : 2SP) -> (l : 2SPLine) -> ( (P(2SPLinetoPoint (dual2SPto2SPLine p)) ) ∙ (P (2SPtoPoint (dual2SPLineto2SP l)) ) ) ≡  ( (P (2SPLinetoPoint l)) ∙ (P (2SPtoPoint p)) )
+--lemma11 1Point1 1Line1 = {!!}
 
-lemma12 :  {P : 2SP} →{L : 2SPLine} → ((checkOnLine (P) (L)) ≡ true) → (checkOnLine (dual2SPLineto2SP (L)) (dual2SPto2SPLine (P )) ≡ true)
-lemma12 proof = {!!}
+
+
+--lemma1 : {p : 2SP} -> {l : 2SPLine} -> meets p l -> meets (dual2SPLineto2SP l) (dual2SPto2SPLine  p)
+--lemma1 {p} {l} pOnl =
+--  ((P (2SPtoPoint (dual2SPLineto2SP l))) ∙ (P (2SPLinetoPoint (dual2SPto2SPLine  p))))
+--       ≡⟨ {!!} ⟩
+--  0ℚ
+--  ∎
+--  where open ≡-Reasoning
+
+--lemma12 :  {P : 2SP} →{L : 2SPLine} → ((checkOnLine (P) (L)) ≡ true) → (checkOnLine (dual2SPLineto2SP (L)) (dual2SPto2SPLine (P )) ≡ true)
+--lemma12 proof = {!!}
 
 
 -- Lemma 2: If two points p1 and p2 lie on a line L, then the intersection of the dual of p1 and p2, is the dual point of line L
@@ -527,3 +725,74 @@ lemma12 proof = {!!}
 -- Lemma 3: If you move a point p on a line L, then the dual of that point rotates arround the dual of L
 
 
+
+
+
+
+
+
+
+-- preparation for lemma1:
+
+dual2Lemma1 : (p : 2SP) → P (2SPtoPoint p) ≡ P (2SPLinetoPoint (dual2SPto2SPLine p))
+dual2Lemma1 (3point+ x x₁) = refl
+dual2Lemma1 (3point- x x₁) = refl
+dual2Lemma1 (2point+ x) = refl
+dual2Lemma1 (2point- x) = refl
+dual2Lemma1 1point+ = refl
+dual2Lemma1 1point- = refl
+
+dual2Lemma2 : (l : 2SPLine) → P (2SPLinetoPoint l) ≡ P (2SPtoPoint (dual2SPLineto2SP l))
+dual2Lemma2 (3line+ x x₁) = refl
+dual2Lemma2 (3line- x x₁) = refl
+dual2Lemma2 (2line+ x) = refl
+dual2Lemma2 (2line- x) = refl
+dual2Lemma2 1line+ = refl
+dual2Lemma2 1line- = refl
+
+lemma1 : {p : 2SP} → {l : 2SPLine} → meets p l → meets (dual2SPLineto2SP l) (dual2SPto2SPLine p)
+lemma1 {p} {l} pOnl =
+   let
+     pp : Point
+     pp = P (2SPLinetoPoint (dual2SPto2SPLine p))
+     pl : Point
+     pl = P (2SPtoPoint (dual2SPLineto2SP l))
+   in
+     pl ∙ pp
+       ≡⟨ cong (pl ∙_) (sym (dual2Lemma1 p)) ⟩
+     pl ∙ (P (2SPtoPoint p))
+       ≡⟨ cong (λ x →  x ∙ (P (2SPtoPoint p))) (sym (dual2Lemma2 l)) ⟩
+     (P (2SPLinetoPoint l)) ∙ (P (2SPtoPoint p))
+       ≡⟨ ∙-sym ((P (2SPLinetoPoint l))) ((P (2SPtoPoint p))) ⟩
+     (P (2SPtoPoint p)) ∙ (P (2SPLinetoPoint l))
+       ≡⟨ pOnl ⟩
+     0ℚ
+        ∎
+   where open ≡-Reasoning
+
+
+-- Lemma 2: If two points p1 and p2 lie on a line L, then the intersection of the dual of p1 and p2, is the dual point of line L
+-- preparation
+
+×Not02SP : 2SP → 2SP → Set
+×Not02SP p1 p2 = xProductNot0 (2SPtoPoint p1) (2SPtoPoint p2)
+
+×Not02SPL : 2SPLine → 2SPLine → Set
+×Not02SPL l1 l2 = xProductNot0 (2SPLinetoPoint l1) (2SPLinetoPoint l2)
+
+dual×Not0 : {p1 p2 : 2SP} → ×Not02SP p1 p2 →
+                                ×Not02SPL (dual2SPto2SPLine p1) (dual2SPto2SPLine p2)
+dual×Not0 {p1} {p2} (mkxProductNot0 x) = mkxProductNot0 z where
+  y : not0 (P (2SPLinetoPoint (dual2SPto2SPLine p1)) ×
+            P (2SPtoPoint p2))
+  y = subst (λ p → not0 (p × (P (2SPtoPoint p2)))) (dual2Lemma1 p1) x
+  z : not0 (P (2SPLinetoPoint (dual2SPto2SPLine p1)) ×
+            P (2SPLinetoPoint (dual2SPto2SPLine p2)))
+  z = subst (λ p → not0 ((P (2SPLinetoPoint (dual2SPto2SPLine p1))) × p )) (dual2Lemma1 p2) y
+
+lemma2 : (p1 p2 : 2SP) → (xNot0 : ×Not02SP p1 p2) →
+         (intersection (dual2SPto2SPLine p1) (dual2SPto2SPLine p2) (dual×Not0 xNot0)) ≡
+         (dual2SPLineto2SP (connectingLine p1 p2 xNot0))
+lemma2 p1 p2 xNot0 = {!!}  -- wahrscheinlich zu schwer...
+
+-- Lemma 3: If you move a point p on a line L, then the dual of that point rotates arround the dual of L
